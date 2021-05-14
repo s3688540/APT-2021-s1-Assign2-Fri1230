@@ -1,10 +1,12 @@
-
 #include "LinkedList.h"
 #include "Player.h"
-
+#include"GameFile.h"
+#include <cstring>
+#include<time.h>
 #include <iostream>
 #include <vector>
 #include <string>
+#include <string.h>
 #include <ctime>
 using namespace std;
 
@@ -27,160 +29,267 @@ int palceAtVector(string tileStr, string placeStr, vector<vector<string> > &obj,
 void printVector(vector<vector<string> > obj);
 
 int makeScore(int row, int col, vector<vector<string> > obj);
+void creditMenu();
+
+//int main(void)
+//{
+//   Player player1;
+//   Player player2;
+//   LinkedList linkedList;
+//   bool checkFlag;
+//   bool turnFlag;
+//   int obj[72];
+//   char stdin1[100];
+//   char stdin2[100];
+//   vector<string> result;
+//   for (int i = 0; i < 72; i++)
+//   {
+//      obj[i] = 0;
+//   }
+//
+//   int MAX_SIZE = 26;
+//   vector<vector<string> > boardVector(MAX_SIZE, vector<string>(MAX_SIZE));
+//   for (int i = 0; i < boardVector.size(); i++)
+//   {
+//      for (int j = 0; j < boardVector[i].size(); j++)
+//      {
+//         boardVector[i][j] = "  ";
+//      }
+//   }
+//
+//   player1.name = 'A';
+//   player2.name = 'B';
+//   player1.score = 0;
+//   player2.score = 0;
+//   do
+//   {
+//      cout << "Input the Number(1~4) to select operation: \n";
+//      cin.getline(stdin1, 100);
+//      switch (stdin1[0])
+//      {
+//      case '1':
+//         cout << "1 step" << std::endl;
+//         break;
+//      case '2':
+//         linkedList = initBag();
+//         player1.hand = initHand(linkedList, obj);
+//         player2.hand = initHand(linkedList, obj);
+//         turnFlag = true;
+//
+//         do
+//         {
+//
+//            if (turnFlag)
+//            {
+//               cout << endl;
+//               cout << player1.name << ",it's your turn" << endl;
+//               cout << "Score for " << player1.name << ":" << player1.score << endl;
+//               cout << "Score for " << player2.name << ":" << player2.score << endl;
+//               printVector(boardVector);
+//               player1.hand.printHand();
+//               do
+//               {
+//                  cout << ">";
+//                  cin.getline(stdin2, 100);
+//                  if (strncmp(stdin2, "EOF", 3) == 0)
+//                  {
+//                     break;
+//                  }
+//                  result = charSplit(stdin2);
+//
+//                  checkFlag = checkReplaceLegal(result, player1.hand) == 5 || checkPlaceLegal(result, player1.hand) == 8;
+//                  if (checkReplaceLegal(result, player1.hand) == 5)
+//                  {
+//                     //
+//                     replaceHand(result, linkedList, player1.hand, obj);
+//                  }
+//                  else if (checkPlaceLegal(result, player1.hand) == 8)
+//                  {
+//                     if (palceAtVector(result.at(1), result.at(3), boardVector, player1) == 1)
+//                     {
+//                        player1.hand.cut(result.at(1)[0], atoi(&result.at(1)[1]));
+//                     }
+//                     else
+//                     {
+//                        cout << "inlegal place position input!" << endl;
+//                        checkFlag = false;
+//                     }
+//                  }
+//                  else
+//                  {
+//                     cout << "inlegal input!" << endl;
+//                  }
+//               } while (!checkFlag);
+//               turnFlag = false;
+//            }
+//            else
+//            {
+//               cout << endl;
+//               cout << player2.name << ",it's your turn" << endl;
+//               cout << "Score for " << player1.name << ":" << player1.score << endl;
+//               cout << "Score for " << player2.name << ":" << player2.score << endl;
+//               printVector(boardVector);
+//               player2.hand.printHand();
+//               do
+//               {
+//                  cout << ">";
+//                  cin.getline(stdin2, 100);
+//                  if (strncmp(stdin2, "EOF", 3) == 0)
+//                  {
+//                     break;
+//                  }
+//                  result = charSplit(stdin2);
+//
+//                  checkFlag = checkReplaceLegal(result, player2.hand) == 5 || checkPlaceLegal(result, player2.hand) == 8;
+//                  if (checkReplaceLegal(result, player2.hand) == 5)
+//                  {
+//                     //
+//                     replaceHand(result, linkedList, player2.hand, obj);
+//            
+//                  }
+//                  else if (checkPlaceLegal(result, player2.hand) == 8)
+//                  {
+//                     if (palceAtVector(result.at(1), result.at(3), boardVector, player2) == 1)
+//                     {
+//                        player2.hand.cut(result.at(1)[0], atoi(&result.at(1)[1]));
+//      
+//                     }
+//                     else
+//                     {
+//                        cout << "inlegal place position input!" << endl;
+//                        checkFlag = false;
+//                     }
+//                  }
+//                  else
+//                  {
+//                     cout << "inlegal input!" << endl;
+//                  }
+//               } while (!checkFlag);
+//               turnFlag = true;
+//            }
+//         } while (strncmp(stdin2, "EOF", 3) != 0);
+//
+//         break;
+//      case '3':
+//         std::cout << "3 step" << std::endl;
+//         break;
+//      case '4':
+//         std::cout << "Good bye" << std::endl;
+//         break;
+//      default:
+//         std::cout << "Input error" << std::endl;
+//      }
+//   } while (stdin1[0] != '4');
+//
+//   return EXIT_SUCCESS;
+//}
+
+void LoadGameTest()
+{
+    GameFile gamefile;
+    GameFile loadGameFile = gamefile.loadGame("data.txt");
+    loadGameFile.saveGame("data2.txt");
+}
+void SaveGameTest()
+{
+    GameFile gamefile;
+
+    //data for player 1
+    gamefile.player[0].name = "A";
+    gamefile.player[0].score = 8;
+    gamefile.player[0].turn = true;
+    gamefile.player[0].hand.create();
+    Node* player_head = gamefile.player[0].hand.getHead();
+    for (int i = 0; i < 10; i++)
+    {
+        Tile* tile = new Tile();
+        tile->colour = RED;
+        tile->shape = CIRCLE;
+        Node* node = new Node(tile, NULL);
+        gamefile.player[0].hand.insert(node);
+    }
+
+    //data for player 2
+    gamefile.player[1].name = "B";
+    gamefile.player[1].score = 6;
+    gamefile.player[1].turn = false;
+    gamefile.player[1].hand.create();
+    player_head = gamefile.player[1].hand.getHead();
+    for (int i = 0; i < 5; i++)
+    {
+        Tile* tile = new Tile();
+        tile->colour = ORANGE;
+        tile->shape = SQUARE;
+        Node* node = new Node(tile, NULL);
+        gamefile.player[1].hand.insert(node);
+    }
+
+    //board size
+    gamefile.boardHeight = 26;
+    gamefile.boardWidth = 26;
+    
+    //board
+    gamefile.boardState = vector<vector<string>>(26, vector<string>(26, "  "));
+    srand(time(NULL));
+    for (int i = 0; i < 26; i++)
+    {
+        for (int j = 0; j < 26; j++)
+        {
+            int rnum = rand() % 100 + 1;
+
+            if (rnum % 2 == 0&&rnum%5==0)
+            {
+                gamefile.boardState[i][j] = "C4";
+            }
+        }
+    }
+
+    //Bag data
+    gamefile.bagLinkedList.create();
+    Node* bag_head = gamefile.bagLinkedList.getHead();
+    for (int i = 0; i < 7; i++)
+    {
+        Tile* tile = new Tile();
+        tile->colour = GREEN;
+        tile->shape = DIAMOND;
+        Node* node = new Node(tile, NULL);
+        gamefile.bagLinkedList.insert(node);
+    }
+
+
+    //current player data
+    gamefile.currentPlayer = "A";
+
+    gamefile.saveGame("data.txt");
+
+}
 
 int main(void)
 {
-   Player player1;
-   Player player2;
-   LinkedList linkedList;
-   bool checkFlag;
-   bool turnFlag;
-   int obj[72];
-   char stdin1[100];
-   char stdin2[100];
-   vector<string> result;
-   for (int i = 0; i < 72; i++)
-   {
-      obj[i] = 0;
-   }
-
-   int MAX_SIZE = 26;
-   vector<vector<string> > boardVector(MAX_SIZE, vector<string>(MAX_SIZE));
-   for (int i = 0; i < boardVector.size(); i++)
-   {
-      for (int j = 0; j < boardVector[i].size(); j++)
-      {
-         boardVector[i][j] = "  ";
-      }
-   }
-
-   player1.name = 'A';
-   player2.name = 'B';
-   player1.score = 0;
-   player2.score = 0;
-   do
-   {
-      cout << "Input the Number(1~4) to select operation: \n";
-      cin.getline(stdin1, 100);
-      switch (stdin1[0])
-      {
-      case '1':
-         cout << "1 step" << std::endl;
-         break;
-      case '2':
-         linkedList = initBag();
-         player1.hand = initHand(linkedList, obj);
-         player2.hand = initHand(linkedList, obj);
-         turnFlag = true;
-
-         do
-         {
-
-            if (turnFlag)
-            {
-               cout << endl;
-               cout << player1.name << ",it's your turn" << endl;
-               cout << "Score for " << player1.name << ":" << player1.score << endl;
-               cout << "Score for " << player2.name << ":" << player2.score << endl;
-               printVector(boardVector);
-               player1.hand.printHand();
-               do
-               {
-                  cout << ">";
-                  cin.getline(stdin2, 100);
-                  if (strncmp(stdin2, "EOF", 3) == 0)
-                  {
-                     break;
-                  }
-                  result = charSplit(stdin2);
-
-                  checkFlag = checkReplaceLegal(result, player1.hand) == 5 || checkPlaceLegal(result, player1.hand) == 8;
-                  if (checkReplaceLegal(result, player1.hand) == 5)
-                  {
-                     //
-                     replaceHand(result, linkedList, player1.hand, obj);
-                  }
-                  else if (checkPlaceLegal(result, player1.hand) == 8)
-                  {
-                     if (palceAtVector(result.at(1), result.at(3), boardVector, player1) == 1)
-                     {
-                        player1.hand.cut(result.at(1)[0], atoi(&result.at(1)[1]));
-                     }
-                     else
-                     {
-                        cout << "inlegal place position input!" << endl;
-                        checkFlag = false;
-                     }
-                  }
-                  else
-                  {
-                     cout << "inlegal input!" << endl;
-                  }
-               } while (!checkFlag);
-               turnFlag = false;
-            }
-            else
-            {
-               cout << endl;
-               cout << player2.name << ",it's your turn" << endl;
-               cout << "Score for " << player1.name << ":" << player1.score << endl;
-               cout << "Score for " << player2.name << ":" << player2.score << endl;
-               printVector(boardVector);
-               player2.hand.printHand();
-               do
-               {
-                  cout << ">";
-                  cin.getline(stdin2, 100);
-                  if (strncmp(stdin2, "EOF", 3) == 0)
-                  {
-                     break;
-                  }
-                  result = charSplit(stdin2);
-
-                  checkFlag = checkReplaceLegal(result, player2.hand) == 5 || checkPlaceLegal(result, player2.hand) == 8;
-                  if (checkReplaceLegal(result, player2.hand) == 5)
-                  {
-                     //
-                     replaceHand(result, linkedList, player2.hand, obj);
-            
-                  }
-                  else if (checkPlaceLegal(result, player2.hand) == 8)
-                  {
-                     if (palceAtVector(result.at(1), result.at(3), boardVector, player2) == 1)
-                     {
-                        player2.hand.cut(result.at(1)[0], atoi(&result.at(1)[1]));
-      
-                     }
-                     else
-                     {
-                        cout << "inlegal place position input!" << endl;
-                        checkFlag = false;
-                     }
-                  }
-                  else
-                  {
-                     cout << "inlegal input!" << endl;
-                  }
-               } while (!checkFlag);
-               turnFlag = true;
-            }
-         } while (strncmp(stdin2, "EOF", 3) != 0);
-
-         break;
-      case '3':
-         std::cout << "3 step" << std::endl;
-         break;
-      case '4':
-         std::cout << "Good bye" << std::endl;
-         break;
-      default:
-         std::cout << "Input error" << std::endl;
-      }
-   } while (stdin1[0] != '4');
-
-   return EXIT_SUCCESS;
+    creditMenu();
+    SaveGameTest();
+    
+    //LoadGameTest();
 }
 
+void creditMenu()
+{
+    cout << "----------------------------------" << endl;
+    cout << "Name:" << "Junyu Li" << endl;
+    cout << "Student ID:" << "s3706335" << endl;
+    cout << "Email:" <<"s3706335@student.rmit.edu.au"<< endl;
+    cout << endl;
+
+    cout << "Name:" << "Zongzhou Wang" << endl;
+    cout << "Student ID:" << "s3688540" << endl;
+    cout << "Email:" << "s3688540@student.rmit.edu.au" << endl;
+    cout << endl;
+
+    cout << "Name:" << "Henghao Li" << endl;
+    cout << "Student ID:" << "s3798993" << endl;
+    cout << "Email:" << "s3798993@student.rmit.edu.au" << endl;
+    cout << "----------------------------------" << endl;
+}
 LinkedList initBag()
 {
    LinkedList linkedList;
@@ -282,9 +391,9 @@ void mainMenu()
 string readEnvStdin()
 {
    //TODO
-   char stdin[100];
-   std::cin.getline(stdin, 100);
-   return stdin;
+   char stdi[100];
+   std::cin.getline(stdi, 100);
+   return stdi;
 }
 
 vector<string> charSplit(const string &str)

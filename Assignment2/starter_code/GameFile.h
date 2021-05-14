@@ -5,6 +5,7 @@
 #include "Player.h"
 #include <string>
 #include<vector>
+#include<fstream>
 using namespace std;
 
 class GameFile {
@@ -18,10 +19,9 @@ public:
    vector<vector<string> > boardState; // store the board state of game
    LinkedList bagLinkedList; // store the bag of tiles
    string currentPlayer; // store the turn of player
-
+   vector<string> charSplit(const string& str,const char* sep);
    int saveGame(string fileName); // save the game info,if save succeed retrun 1,else return 0
    GameFile loadGame(string fileName); // load the game info,if load succeed return GameFile,else return NULL
-
 
 
 };

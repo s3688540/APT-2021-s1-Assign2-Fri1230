@@ -22,6 +22,7 @@ public:
    void printHand();//show Hand
    //void clear();
    Node* find(Colour colour,Shape shape); 
+   Node* getHead();
 
 
 

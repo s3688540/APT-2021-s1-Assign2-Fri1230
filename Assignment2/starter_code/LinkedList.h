@@ -23,7 +23,7 @@ public:
    //void clear();
    Node* find(Colour colour,Shape shape); 
    Node* getHead();
-
+   int size(); 
 
 
 private:

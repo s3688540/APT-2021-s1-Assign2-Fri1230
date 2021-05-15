@@ -1,0 +1,1290 @@
+#include "LinkedList.h"
+#include "Player.h"
+#include "Student.h"
+
+#include <iostream>
+#include <vector>
+#include <string>
+#include <ctime>
+#include <cctype>
+using namespace std;
+
+#define EXIT_SUCCESS 0
+
+#define COLOUR_ARR "ROY"  //default: "ROYGBP"
+#define SHAPE_ARR {1,2,3}  //default:{1, 2, 3, 4, 5, 6}
+#define TILE_TOTAL_NUMBER 18 //default:72
+#define COLOUR_TYPE 3 // default:6
+#define SHAPE_TYPE 3 // default:6
+#define HAND_TILE_NUMBER 6 
+#define BOARD_MAX_SIZE 26
+#define MAX_CHAR_NUMBER 1000
+
+string readStdin();                                                                               // 1.
+vector<string> charSplit(const string &str);                                                      // 2.
+vector<int> initRandObj();                                                                        // 3.
+LinkedList initBag(vector<int> randObj);                                                          // 4.
+LinkedList initHand(LinkedList &linkedList);                                                      // 5.
+vector<vector<string> > initBoard();                                                              // 6.
+int checkReplaceFormat(vector<string> result);                                                    // 7.
+int checkReplaceLegal(vector<string> result, LinkedList hand);                                    // 8.
+int replaceHand(vector<string> result, LinkedList &linkedList, LinkedList &hand);                 // 9.
+int checkPlaceFormat(vector<string> result);                                                      // 10.
+int checkPlaceLegal(vector<string> result, LinkedList hand);                                      // 11.
+int palceAtVector(string tileStr, string placeStr, vector<vector<string> > &obj, Player &player); // 12.
+
+int makeScore(int row, int col, vector<vector<string> > obj); // 14.
+int addHand(LinkedList &linkedList, LinkedList &hand);        // 15.
+void printVector(vector<vector<string> > obj);                // 16.
+
+void welcome();         // 17.
+void mainMenu();        // 18.
+void showStudentInfo(); // 19.
+int checkPlayName(string name); // 20.
+void winner(Player player1,Player player2);
+void playNewGame(LinkedList &linkedList, Player &player1, Player &player2, vector<vector<string> > &boardVector);
+
+int main(int argc, char const *argv[])
+{
+    LinkedList linkedList;
+    Player player1;
+    Player player2;
+    vector<vector<string> > boardVector;
+
+    welcome();
+    mainMenu();
+    boardVector = initBoard();
+    
+    string stdins;
+    do
+    {
+        cout << ">";
+        stdins = readStdin();
+        switch (stdins[0])
+        {
+        case '1':
+            playNewGame(linkedList, player1,player2, boardVector);
+            mainMenu();
+            break;
+
+        case '2':
+            cout << "Enter the filename from which load a game" << endl;
+            cout << ">" << endl;
+            break;
+
+        case '3':
+            showStudentInfo();
+            mainMenu();
+            break;
+
+        case '4':
+            std::cout << "Good bye" << std::endl;
+            break;
+
+        default:
+            std::cout << "Sorry,input error.!!!You should input number 1 0r 2 or 3 or 4." << std::endl;
+        }
+    } while (stdins[0] != '4');
+    
+
+    return EXIT_SUCCESS;
+}
+
+// 1.read the input from terminal
+string readStdin()
+{
+    //TODO
+    char stdin[MAX_CHAR_NUMBER];
+    cin.getline(stdin, MAX_CHAR_NUMBER);
+    return stdin;
+}
+
+// 2. split the input of string by "  "
+vector<string> charSplit(const string &str)
+{
+    vector<string> result;
+    char *s = new char[str.length() + 1];
+    strcpy(s, str.c_str());
+    const char *sep = " "; //delim char
+    char *p;
+    p = strtok(s, sep);
+    while (p)
+    {
+        result.push_back(p);
+        p = strtok(NULL, sep);
+    }
+    return result;
+}
+
+// 3. init a random vector to init bag of tiles
+vector<int> initRandObj()
+{
+    vector<int> objRand;
+    int obj[TILE_TOTAL_NUMBER];
+    int flag = 0;
+    int randInt;
+
+    for (int i = 0; i < TILE_TOTAL_NUMBER; i++)
+    {
+        obj[i] = 0;
+    }
+
+    srand((int)time(NULL)); // radomn seed is zero
+    while (flag < TILE_TOTAL_NUMBER)
+    {
+        randInt = rand() % TILE_TOTAL_NUMBER;
+        if (obj[randInt] == 0)
+        {
+            objRand.push_back(randInt);
+            obj[randInt] = 1;
+            flag++;
+        }
+    }
+
+    return objRand;
+}
+
+// 4. init a bag of tiles by a random vector
+LinkedList initBag(vector<int> randObj)
+{
+    LinkedList linkedList;
+    Colour colourArr[] = COLOUR_ARR;
+    Shape shapeArr[] = SHAPE_ARR;
+    Tile tile[TILE_TOTAL_NUMBER];
+
+    linkedList.create(); // init linkedList
+
+    for (int i = 0; i < COLOUR_TYPE; i++)
+    {
+        for (int j = 0; j < SHAPE_TYPE; j++)
+        {
+            int pos1 = i + j * COLOUR_TYPE;
+            int pos2 = i + j * COLOUR_TYPE + (TILE_TOTAL_NUMBER / 2);
+            tile[pos1].colour = colourArr[i];
+            tile[pos1].shape = shapeArr[j];
+            tile[pos2].colour = colourArr[i];
+            tile[pos2].shape = shapeArr[j];
+        }
+    }
+
+    for (int i = 0; i < (int)randObj.size(); i++)
+    {
+
+        Tile *tileNew = new Tile();
+        tileNew->colour = tile[randObj[i]].colour;
+        tileNew->shape = tile[randObj[i]].shape;
+
+        Node *node = new Node(tileNew, NULL);
+        linkedList.insert(node);
+    }
+    return linkedList;
+}
+
+// 5. init a play hand of tiles from bag of tiles
+LinkedList initHand(LinkedList &linkedList)
+{
+
+    LinkedList hand;
+    Node *head;
+
+    head = linkedList.getHead();
+    hand.create();
+
+    srand((int)time(0)); // radomn seed is zero
+    int k = 0;
+    while (k < HAND_TILE_NUMBER)
+    {
+        if (linkedList.size() < 1)
+        {
+            break;
+        }
+        else
+        {
+            Tile *tileNew = new Tile();
+            tileNew->colour = head->next->tile->colour;
+            tileNew->shape = head->next->tile->shape;
+
+            Node *nodeNew = new Node(tileNew, NULL);
+
+            hand.insert(nodeNew);
+            linkedList.cut(head->next->tile->colour, head->next->tile->shape);
+            head = linkedList.getHead();
+            k++;
+        }
+    }
+    return hand;
+}
+
+// 6. init a Board
+vector<vector<string> > initBoard()
+{
+    vector<vector<string> > boardVector(BOARD_MAX_SIZE, vector<string>(BOARD_MAX_SIZE));
+    for (int i = 0; i < (int)boardVector.size(); i++)
+    {
+        for (int j = 0; j < (int)boardVector[i].size(); j++)
+        {
+            boardVector[i][j] = "  ";
+        }
+    }
+    return boardVector;
+}
+
+// 7. check replace format,if legal return 4,else return 0 or 1 or 2 or 3
+int checkReplaceFormat(vector<string> result)
+{
+    if (result.size() != 2)
+    {
+        return 0;
+    }
+    else if (result.at(0) != "replace")
+    {
+        return 1;
+    }
+    else
+    {
+        switch (result.at(1)[0])
+        {
+        case 'R':
+            break;
+        case 'O':
+            break;
+        case 'Y':
+            break;
+        case 'G':
+            break;
+        case 'B':
+            break;
+        case 'P':
+            break;
+        default:
+            return 2;
+        }
+        switch (result.at(1)[1])
+        {
+        case '1':
+            break;
+        case '2':
+            break;
+        case '3':
+            break;
+        case '4':
+            break;
+        case '5':
+            break;
+        case '6':
+            break;
+        default:
+            return 3;
+        }
+    }
+    return 4;
+}
+
+// 8. check whether could replace succeed or not, if ‘yes’ return 5,else return 0 or 1 or 2 or 3 or 4
+int checkReplaceLegal(vector<string> result, LinkedList hand)
+{
+    int flag = checkReplaceFormat(result);
+    if (flag == 4)
+    {
+        char colour = result.at(1)[0];
+        int shape = atoi(&result.at(1)[1]);
+        Node *node = hand.find(colour, shape);
+        if (node)
+        {
+            flag = 5;
+        }
+    }
+    return flag;
+}
+
+// 9. check replace succeed or not, if succeed return 1,else return 0
+int replaceHand(vector<string> result, LinkedList &linkedList, LinkedList &hand)
+{
+    int flag;
+    Tile *handTile = new Tile();
+    Tile *bagTile = new Tile();
+    Node *head;
+    Node *handNode;
+    Node *bagNode;
+
+    head = linkedList.getHead();
+
+    if (linkedList.size() < 1) // linkedList size should > 0
+    {
+        flag = 0;
+    }
+    else
+    {
+
+        handTile->colour = head->next->tile->colour;
+        handTile->shape = head->next->tile->shape;
+        handNode = new Node(handTile, NULL);
+
+        bagTile->colour = result.at(1)[0];
+        bagTile->shape = atoi(&result.at(1)[1]);
+        bagNode = new Node(bagTile, NULL);
+
+        hand.cut(result.at(1)[0], atoi(&result.at(1)[1]));
+        hand.insert(handNode);
+
+        linkedList.cut(head->next->tile->colour, head->next->tile->shape);
+        linkedList.insert(bagNode);
+        flag = 1;
+    }
+    return flag;
+}
+
+// 10. check place format,if legal return 7,else return 0 or 1 or 2 or 3 or 4 or 5 or 6
+int checkPlaceFormat(vector<string> result)
+{
+    if (result.size() != 4)
+    {
+        return 0;
+    }
+    else if (result.at(0) != "place")
+    {
+        return 1;
+    }
+    else if (result.at(2) != "at")
+    {
+        return 2;
+    }
+    else
+    {
+        if (result.at(1).size() != 2)
+        {
+            return 3;
+        }
+        else
+        {
+            switch (result.at(1)[0])
+            {
+            case 'R':
+                break;
+            case 'O':
+                break;
+            case 'Y':
+                break;
+            case 'G':
+                break;
+            case 'B':
+                break;
+            case 'P':
+                break;
+            default:
+                return 3;
+            }
+
+            switch (result.at(1)[1])
+            {
+            case '1':
+                break;
+            case '2':
+                break;
+            case '3':
+                break;
+            case '4':
+                break;
+            case '5':
+                break;
+            case '6':
+                break;
+            default:
+                return 4;
+            }
+        }
+
+        if (result.at(3).size() != 2 && result.at(3).size() != 3)
+        {
+            return 5;
+        }
+        else if (result.at(3).size() == 2)
+        {
+            switch (result.at(3)[1])
+            {
+            case '0':
+                break;
+            case '1':
+                break;
+            case '2':
+                break;
+            case '3':
+                break;
+            case '4':
+                break;
+            case '5':
+                break;
+            case '6':
+                break;
+            case '7':
+                break;
+            case '8':
+                break;
+            case '9':
+                break;
+            default:
+                return 6;
+            }
+        }
+        else
+        {
+            if (result.at(3)[1] != '1' && result.at(3)[1] != '2')
+            {
+                return 6;
+            }
+            else if (result.at(3)[1] == '1')
+            {
+                switch (result.at(3)[2])
+                {
+                case '0':
+                    break;
+                case '1':
+                    break;
+                case '2':
+                    break;
+                case '3':
+                    break;
+                case '4':
+                    break;
+                case '5':
+                    break;
+                case '6':
+                    break;
+                case '7':
+                    break;
+                case '8':
+                    break;
+                case '9':
+                    break;
+                default:
+                    return 6;
+                }
+            }
+            else
+            {
+                switch (result.at(3)[2])
+                {
+                case '0':
+                    break;
+                case '1':
+                    break;
+                case '2':
+                    break;
+                case '3':
+                    break;
+                case '4':
+                    break;
+                case '5':
+                    break;
+                default:
+                    return 6;
+                }
+            }
+        }
+
+        switch (result.at(3)[0])
+        {
+        case 'A':
+            break;
+        case 'B':
+            break;
+        case 'C':
+            break;
+        case 'D':
+            break;
+        case 'E':
+            break;
+        case 'F':
+            break;
+        case 'G':
+            break;
+        case 'H':
+            break;
+        case 'I':
+            break;
+        case 'J':
+            break;
+        case 'K':
+            break;
+        case 'L':
+            break;
+        case 'M':
+            break;
+        case 'N':
+            break;
+        case 'O':
+            break;
+        case 'P':
+            break;
+        case 'Q':
+            break;
+        case 'R':
+            break;
+        case 'S':
+            break;
+        case 'T':
+            break;
+        case 'U':
+            break;
+        case 'V':
+            break;
+        case 'W':
+            break;
+        case 'X':
+            break;
+        case 'Y':
+            break;
+        case 'Z':
+            break;
+        default:
+            return 5;
+        }
+    }
+    return 7;
+}
+
+// 11. check whether could place  or not, if ‘yes’ return 8,else return 0 or 1 or 2 or 3 or 4 or 5 or 6 or 7
+int checkPlaceLegal(vector<string> result, LinkedList hand)
+{
+    int flag = checkPlaceFormat(result);
+    if (flag == 7)
+    {
+        char colour = result.at(1)[0];
+        int shape = atoi(&result.at(1)[1]);
+        Node *node = hand.find(colour, shape);
+        if (node)
+        {
+            flag = 8;
+        }
+    }
+    return flag;
+}
+
+// 12. check replace succeed or not, if succeed return 1,else return 0
+int palceAtVector(string tileStr, string placeStr, vector<vector<string> > &obj, Player &player)
+{
+    int flag = 0;
+    for (int i = 0; i < (int)obj.size(); i++)
+    {
+        for (int j = 0; j < (int)obj[i].size(); j++)
+        {
+            if (obj[i][j] != "  ")
+            {
+                flag = 2;
+            }
+        }
+    }
+    int row = 0;
+    int col = 0;
+
+    // transfer row
+    switch (placeStr[0])
+    {
+    case 'A':
+        row = 0;
+        break;
+    case 'B':
+        row = 1;
+        break;
+    case 'C':
+        row = 2;
+        break;
+    case 'D':
+        row = 3;
+        break;
+    case 'E':
+        row = 4;
+        break;
+    case 'F':
+        row = 5;
+        break;
+    case 'G':
+        row = 6;
+        break;
+    case 'H':
+        row = 7;
+        break;
+    case 'I':
+        row = 8;
+        break;
+    case 'J':
+        row = 9;
+        break;
+    case 'K':
+        row = 10;
+        break;
+    case 'L':
+        row = 11;
+        break;
+    case 'M':
+        row = 12;
+        break;
+    case 'N':
+        row = 13;
+        break;
+    case 'O':
+        row = 14;
+        break;
+    case 'P':
+        row = 15;
+        break;
+    case 'Q':
+        row = 16;
+        break;
+    case 'R':
+        row = 17;
+        break;
+    case 'S':
+        row = 18;
+        break;
+    case 'T':
+        row = 19;
+        break;
+    case 'U':
+        row = 20;
+        break;
+    case 'V':
+        row = 21;
+        break;
+    case 'W':
+        row = 22;
+        break;
+    case 'X':
+        row = 23;
+        break;
+    case 'Y':
+        row = 24;
+        break;
+    case 'Z':
+        row = 25;
+        break;
+    default:
+        break;
+    }
+
+    // transfer col
+    if (placeStr.size() == 2)
+    {
+        col = atoi(&placeStr[1]);
+    }
+    else
+    {
+        if (placeStr[1] == '1')
+        {
+            col = atoi(&placeStr[2]) + 10;
+        }
+        else
+        {
+            col = atoi(&placeStr[2]) + 20;
+        }
+    }
+    //cout << "row:" << row << ",col:" << col << endl;
+    if (flag == 0)
+    {
+        obj[row][col] = tileStr;
+        flag = 1;
+    }
+    else
+    {
+        if (obj[row][col] == "  ")
+        {
+            if (row == 0)
+            {
+                if (col == 0)
+                {
+                    if (obj[row][col + 1] != "  " || obj[row + 1][col] != "  ")
+                    {
+                        obj[row][col] = tileStr;
+                        flag = 1;
+                    }
+                }
+                else if (col == 25)
+                {
+                    if (obj[row][col - 1] != "  " || obj[row + 1][col] != "  ")
+                    {
+                        obj[row][col] = tileStr;
+                        flag = 1;
+                    }
+                }
+                else
+                {
+                    if (obj[row][col - 1] != "  " || obj[row][col + 1] != "  " || obj[row + 1][col] != "  ")
+                    {
+                        obj[row][col] = tileStr;
+                        flag = 1;
+                    }
+                }
+            }
+            else if (row == 25)
+            {
+                if (col == 0)
+                {
+                    if (obj[row][col + 1] != "  " || obj[row - 1][col] != "  ")
+                    {
+                        obj[row][col] = tileStr;
+                        flag = 1;
+                    }
+                }
+                else if (col == 25)
+                {
+                    if (obj[row][col - 1] != "  " || obj[row - 1][col] != "  ")
+                    {
+                        obj[row][col] = tileStr;
+                        flag = 1;
+                    }
+                }
+                else
+                {
+                    if (obj[row][col - 1] != "  " || obj[row][col + 1] != "  " || obj[row - 1][col] != "  ")
+                    {
+                        obj[row][col] = tileStr;
+                        flag = 1;
+                    }
+                }
+            }
+            else
+            {
+                if (col == 0)
+                {
+                    if (obj[row - 1][col] != "  " || obj[row + 1][col] != "  " || obj[row][col + 1] != "  ")
+                    {
+                        obj[row][col] = tileStr;
+                        flag = 1;
+                    }
+                }
+                else if (col == 25)
+                {
+                    if (obj[row - 1][col] != "  " || obj[row + 1][col] != "  " || obj[row][col - 1] != "  ")
+                    {
+                        obj[row][col] = tileStr;
+                        flag = 1;
+                    }
+                }
+                else
+                {
+                    if (obj[row - 1][col] != "  " || obj[row + 1][col] != "  " || obj[row][col - 1] != "  " || obj[row][col + 1] != "  ")
+                    {
+                        obj[row][col] = tileStr;
+                        flag = 1;
+                    }
+                }
+            }
+        }
+    }
+    if (flag == 1)
+    {
+        player.score += makeScore(row, col, obj);
+    }
+    return flag;
+}
+
+// 14. make score after palyer place tile
+int makeScore(int row, int col, vector<vector<string> > obj)
+{
+    int score = 0;
+    int rowScore = 0;
+    int colScore = 0;
+    for (int colBefore = col - 1; colBefore > -1; colBefore--)
+    {
+        if (obj[row][colBefore] != "  ")
+        {
+            rowScore += 1;
+        }
+        else
+        {
+            break;
+        }
+    }
+    for (int colAfter = col + 1; colAfter < (int)obj[0].size(); colAfter++)
+    {
+        if (obj[row][colAfter] != "  ")
+        {
+            rowScore += 1;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    for (int rowUp = row - 1; rowUp > -1; rowUp--)
+    {
+        if (obj[rowUp][col] != "  ")
+        {
+            colScore += 1;
+        }
+        else
+        {
+            break;
+        }
+    }
+    for (int rowDown = row + 1; rowDown < (int)obj.size(); rowDown++)
+    {
+        if (obj[rowDown][col] != "  ")
+        {
+            colScore += 1;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    if (rowScore == 0 && colScore == 0)
+    {
+        score = 1;
+    }
+    else if (rowScore == 0)
+    {
+        score = colScore + 1;
+        if (colScore == 5)
+        {
+            score += 6;
+            cout << "qwirkle!!!" << endl;
+        }
+    }
+    else if (colScore == 0)
+    {
+        score = rowScore + 1;
+        if (rowScore == 5)
+        {
+            score += 6;
+            cout << "qwirkle!!!" << endl;
+        }
+    }
+    else
+    {
+        score = (rowScore + 1) + (colScore + 1);
+        if (rowScore == 6)
+        {
+            score += 6;
+            cout << "qwirkle!!!" << endl;
+        }
+        if (colScore == 5)
+        {
+            score += 6;
+            cout << "qwirkle!!!" << endl;
+        }
+    }
+
+    return score;
+}
+
+// 15. add a tile from bag to hand after player place a tile to board
+int addHand(LinkedList &linkedList, LinkedList &hand)
+{
+
+    int flag;
+    Node *head;
+
+    head = linkedList.getHead();
+
+    if (linkedList.size() < 1)
+    {
+        flag = 0;
+    }
+    else
+    {
+        Tile *tileNew = new Tile();
+        tileNew->colour = head->next->tile->colour;
+        tileNew->shape = head->next->tile->shape;
+
+        Node *nodeNew = new Node(tileNew, NULL);
+
+        hand.insert(nodeNew);
+        linkedList.cut(head->next->tile->colour, head->next->tile->shape);
+        head = linkedList.getHead();
+        flag = 1;
+    }
+    return flag;
+}
+
+// 16. print the board when a player's turn is over
+void printVector(vector<vector<string> > obj)
+{
+    for (int j = 0; j < (int)obj[0].size(); j++)
+    {
+        if (j == 0)
+        {
+            cout << "   " << j;
+        }
+        else if (j < 10)
+        {
+            cout << "  " << j;
+        }
+        else
+        {
+            cout << " " << j;
+        }
+    }
+    cout << endl;
+
+    for (int j = 0; j < (int)obj[0].size(); j++)
+    {
+        if (j == 0)
+        {
+            cout << "  ----";
+        }
+        else
+        {
+            cout << "----";
+        }
+    }
+    cout << endl;
+
+    for (int i = 0; i < (int)obj.size(); i++)
+    {
+        switch (i)
+        {
+        case 0:
+            cout << 'A' << " |";
+            break;
+        case 1:
+            cout << 'B' << " |";
+            break;
+        case 2:
+            cout << 'C' << " |";
+            break;
+        case 3:
+            cout << 'D' << " |";
+            break;
+        case 4:
+            cout << 'E' << " |";
+            break;
+        case 5:
+            cout << 'F' << " |";
+            break;
+        case 6:
+            cout << 'G' << " |";
+            break;
+        case 7:
+            cout << 'H' << " |";
+            break;
+        case 8:
+            cout << 'I' << " |";
+            break;
+        case 9:
+            cout << 'J' << " |";
+            break;
+        case 10:
+            cout << 'K' << " |";
+            break;
+        case 11:
+            cout << 'L' << " |";
+            break;
+        case 12:
+            cout << 'M' << " |";
+            break;
+        case 13:
+            cout << 'N' << " |";
+            break;
+        case 14:
+            cout << 'O' << " |";
+            break;
+        case 15:
+            cout << 'P' << " |";
+            break;
+        case 16:
+            cout << 'Q' << " |";
+            break;
+        case 17:
+            cout << 'R' << " |";
+            break;
+        case 18:
+            cout << 'S' << " |";
+            break;
+        case 19:
+            cout << 'T' << " |";
+            break;
+        case 20:
+            cout << 'U' << " |";
+            break;
+        case 21:
+            cout << 'V' << " |";
+            break;
+        case 22:
+            cout << 'W' << " |";
+            break;
+        case 23:
+            cout << 'X' << " |";
+            break;
+        case 24:
+            cout << 'Y' << " |";
+            break;
+        case 25:
+            cout << 'Z' << " |";
+            break;
+        default:
+            break;
+        }
+        for (int j = 0; j < (int)obj[i].size(); j++)
+        {
+            cout << obj[i][j] << "|";
+        }
+        cout << "\n";
+    }
+}
+
+// 17. welcome
+void welcome()
+{
+    cout << "Welcome to Qwirkle!" << endl;
+    cout << "-------------------" << endl;
+}
+
+// 18. main menu
+void mainMenu()
+{
+
+    cout << "Menu" << endl;
+    cout << "----" << endl;
+    cout << "1. New Game" << endl;
+    cout << "2. Load Game" << endl;
+    cout << "3. Credits (Show student information)" << endl;
+    cout << "4. Quit" << endl;
+    cout << endl;
+}
+
+// 19. credit(show info. of teamer)
+void showStudentInfo()
+{
+    Student student[3];
+    student[0].name = "HenghaoLi";
+    student[0].sudentId = "s3798993";
+    student[0].email = "s3798993@student.rmit.edu.au";
+
+    student[1].name = "JunyuLi";
+    student[1].sudentId = "s3706335";
+    student[1].email = "s3706335@student.rmit.edu.au";
+
+    student[2].name = "Zongzhouwang";
+    student[2].sudentId = "s3688540";
+    student[2].email = "s3688540@student.rmit.edu.au";
+
+    cout << endl;
+    cout << "----------------------------------" << endl;
+    cout << "Name:" << student[0].name << endl;
+    cout << "Student ID:" << student[0].sudentId << endl;
+    cout << "Email:" << student[0].email << endl;
+    cout << endl;
+
+    cout << "Name:" << student[1].name << endl;
+    cout << "Student ID:" << student[1].sudentId << endl;
+    cout << "Email:" << student[1].email << endl;
+    cout << endl;
+
+    cout << "Name:" << student[2].name << endl;
+    cout << "Student ID:" << student[2].sudentId << endl;
+    cout << "Email:" << student[2].email << endl;
+    cout << "----------------------------------" << endl;
+
+    cout << endl;
+}
+
+// 20. check palyer name legal or not,if legal return 1,else return 0
+int checkPlayName(string name)
+{
+   int flag = 1;
+   for (int i = 0; i < (int)name.length(); i++)
+   {
+      if (isupper(name[i]) == 0)
+      {
+         flag = 0;
+         break;
+      }
+   }
+   return flag;
+}
+
+
+void winner(Player player1,Player player2)
+{
+    cout<<"Game over"<<endl;
+    cout<<"Score for "<<player1.name<<": "<<player1.score<<endl;
+    cout<<"Score for "<<player2.name<<": "<<player2.score<<endl;
+    if(player1.score > player2.score){
+        cout<<"Player "<<player1.name<< " won!"<<endl;
+    }else if(player1.score == player2.score){
+        cout<<"There is no winner,as the two palyers' have the same score!!!"<<endl;
+    }else{
+        cout<<"Player "<<player2.name<< " won!"<<endl;
+    }
+    cout<<"Goodbye"<<endl;
+}
+
+void playNewGame(LinkedList &linkedList, Player &player1, Player &player2, vector<vector<string> > &boardVector)
+{
+    vector<int> randArr = initRandObj();
+    linkedList = initBag(randArr);
+    player1.hand = initHand(linkedList);
+    player2.hand = initHand(linkedList);
+    
+    bool turnFlag = true;
+    bool checkFlag;
+    bool overFlag = false;
+    vector<string> result;
+
+    string stdinstr;
+
+    cout << endl;
+    cout << "Enter a name for player 1 (uppercase characters only)" << endl;
+    do
+    {
+        cout << ">";
+        stdinstr = readStdin();
+        if (checkPlayName(stdinstr) == 0)
+        {
+            cout << "inlegal name" << endl;
+        }
+        else
+        {
+            player1.name = stdinstr;
+        }
+
+    } while (checkPlayName(stdinstr) == 0);
+
+    cout << endl;
+    cout << "Enter a name for player 2 (uppercase characters only)" << endl;
+    do
+    {
+        cout << ">";
+        stdinstr = readStdin();
+        if (checkPlayName(stdinstr) == 0)
+        {
+            cout << "inlegal name" << endl;
+        }
+        else
+        {
+            player2.name = stdinstr;
+        }
+
+    } while (checkPlayName(stdinstr) == 0);
+
+    cout << endl;
+    cout << "Let's Play!" << endl;
+    do
+    {
+
+        if (turnFlag)
+        {
+            cout << endl;
+            cout << player1.name << ",it's your turn" << endl;
+            cout << "Score for " << player1.name << ":" << player1.score << endl;
+            cout << "Score for " << player2.name << ":" << player2.score << endl;
+            cout << "The number of Tiles in Bag is:" << linkedList.size() << endl;
+            printVector(boardVector);
+            player1.hand.printHand();
+            do
+            {
+                cout << ">";
+                stdinstr = readStdin();
+                if (stdinstr == "EOF")
+                {
+                    overFlag = true;
+                    break;
+                }
+                result = charSplit(stdinstr);
+
+                checkFlag = checkReplaceLegal(result, player1.hand) == 5 || checkPlaceLegal(result, player1.hand) == 8;
+                if (checkReplaceLegal(result, player1.hand) == 5)
+                {
+                    //
+                    if (replaceHand(result, linkedList, player1.hand) == 0)
+                    {
+                        cout << "repalce Tile fail! Bag is empty." << endl;
+                        checkFlag = false;
+                    }
+                }
+                else if (checkPlaceLegal(result, player1.hand) == 8)
+                {
+                    if (palceAtVector(result.at(1), result.at(3), boardVector, player1) == 1)
+                    {
+                        player1.hand.cut(result.at(1)[0], atoi(&result.at(1)[1]));
+                        if (addHand(linkedList, player1.hand) == 0)
+                        {
+                            if(player1.hand.size()<1){
+                                //
+                                winner(player1,player2);
+                                overFlag = true;
+                                break;
+                            }else{
+                                cout << "Attention!!! Bag is empty." << endl;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        cout << "inlegal place position input!" << endl;
+                        checkFlag = false;
+                    }
+                }
+                else
+                {
+                    cout << "inlegal input!" << endl;
+                }
+            } while (!checkFlag);
+            turnFlag = false;
+        }
+        else
+        {
+            cout << endl;
+            cout << player2.name << ",it's your turn" << endl;
+            cout << "Score for " << player1.name << ":" << player1.score << endl;
+            cout << "Score for " << player2.name << ":" << player2.score << endl;
+            cout << "The number of Tiles in Bag is:" << linkedList.size() << endl;
+            printVector(boardVector);
+            player2.hand.printHand();
+            do
+            {
+                cout << ">";
+                stdinstr = readStdin();
+                if (stdinstr == "EOF")
+                {
+                    overFlag = true;
+                    break;
+                    
+                }
+                result = charSplit(stdinstr);
+
+                checkFlag = checkReplaceLegal(result, player2.hand) == 5 || checkPlaceLegal(result, player2.hand) == 8;
+                if (checkReplaceLegal(result, player2.hand) == 5)
+                {
+                    //
+                    if (replaceHand(result, linkedList, player2.hand) == 0)
+                    {
+                        cout << "repalce Tile fail! Bag is empty." << endl;
+                        checkFlag = false;
+                    }
+                }
+                else if (checkPlaceLegal(result, player2.hand) == 8)
+                {
+                    if (palceAtVector(result.at(1), result.at(3), boardVector, player2) == 1)
+                    {
+                        player2.hand.cut(result.at(1)[0], atoi(&result.at(1)[1]));
+                        if (addHand(linkedList, player2.hand) == 0)
+                        {
+                            if(player2.hand.size()<1){
+                                //
+                                winner(player1,player2);
+                                overFlag = true;
+                                break;
+                            }else{
+                                cout << "Attention!!! Bag is empty." << endl;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        cout << "inlegal place position input!" << endl;
+                        checkFlag = false;
+                    }
+                }
+                else
+                {
+                    cout << "inlegal input!" << endl;
+                }
+            } while (!checkFlag);
+            turnFlag = true;
+        }
+    } while (!overFlag);
+}

@@ -181,7 +181,7 @@ int GameFile::loadGame(string fileName)
     vector<string> buffers;
     string buffer;
 
-    //读取文件中的数据
+    //load the data from the file
     while(!input.eof())
     {
         getline(input,buffer);

@@ -21,15 +21,15 @@ public:
    string currentPlayer; // store the turn of player
    vector<string> charSplit(const string& str,const char* sep);
    int saveGame(string fileName); // save the game info,if save succeed retrun 1,else return 0
-   bool checkIsNum(string str); //str是数字返回true,否则返回false
-   bool colourIsValid(char c); //c是规定的颜色('R','0','Y','G','B','P')之一返回true,否则返回false
-   bool ShapeIsValid(char s); //s是规定的形状之一(1,2,3,4,5,6)之一返回true,否则返回false
-   bool rowIsValid(char r); //r在(A-Z)范围内则返回true,否则返回false
-   bool boardIsValid(string colstr); //colstr小于最大列尺寸则返回true,否则返回false
+   bool checkIsNum(string str); // if str is number then return true, otherwise, false
+   bool colourIsValid(char c); //if c inside ('R','0','Y','G','B','P') then return true, otherwise, false
+   bool ShapeIsValid(char s); //if s inside (1,2,3,4,5,6) then return true, otherwise, false
+   bool rowIsValid(char r); //if r inside (A-Z) then return true, otherwise, false
+   bool boardIsValid(string colstr); //if colstr smaller then maximum size then return true, otherwise, false
    
-   // -1:代表文件并不存在
-   //  1:代表文件存储的数据格式错误,无法加载游戏数据
-   //  0:加载成功
+   // -1:file does not exist
+   //  1:format incorrect, unavailble to load
+   //  0:successfully load
    int loadGame(string fileName); // load the game info,if load succeed return GameFile,else return NULL
 
 

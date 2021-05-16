@@ -1061,17 +1061,17 @@ void mainMenu()
 void showStudentInfo()
 {
     Student student[3];
-    student[0].name = "Jack";
-    student[0].sudentId = "123456";
-    student[0].email = "qwerty1";
+    student[0].name = "HenghaoLi";
+    student[0].sudentId = "s3798993";
+    student[0].email = "s3798993@student.rmit.edu.au";
 
-    student[1].name = "Tom";
-    student[1].sudentId = "234567";
-    student[1].email = "qwerty2";
+    student[1].name = "JunyuLi";
+    student[1].sudentId = "s3706335";
+    student[1].email = "s3706335@student.rmit.edu.au";
 
-    student[2].name = "Tim";
-    student[2].sudentId = "345678";
-    student[2].email = "qwerty3";
+    student[2].name = "Zongzhouwang";
+    student[2].sudentId = "s3688540";
+    student[2].email = "s3688540@student.rmit.edu.au";
 
     cout << endl;
     cout << "----------------------------------" << endl;

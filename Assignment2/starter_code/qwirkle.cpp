@@ -606,7 +606,7 @@ int checkPlaceFormat(vector<string> result)
     return 7;
 }
 
-// 11. check whether could place  or not, if yes return 8,else return 0 or 1 or 2 or 3 or 4 or 5 or 6 or 7
+// 11. check whether could place  or not, if ��yes�� return 8,else return 0 or 1 or 2 or 3 or 4 or 5 or 6 or 7
 int checkPlaceLegal(vector<string> result, LinkedList hand)
 {
     int flag = checkPlaceFormat(result);
@@ -3472,9 +3472,9 @@ void loadGame(LinkedList& bagLinkedList, Player& player1, Player& player2, vecto
         string stdstr = readStdin();
         status = gamefile.loadGame(stdstr);
         if (status == -1)
-            cout << "File doesn't exist,please enter filename again.." << endl;
+            cout << "File doesn't exist,please enter filename again.." << endl; //��ʾ��Ϣ:�ļ�������
         else if (status == 1)
-            cout << "data format error,please enter filename again.." << endl;
+            cout << "data format error,please enter filename again.." << endl; //��ʾ��Ϣ:���ݸ�ʽ����ȷ
     } while (status != 0);
     bool turnFlag = gamefile.player[0].turn ? true : false;
     bagLinkedList = gamefile.bagLinkedList;
@@ -3522,7 +3522,7 @@ void play(LinkedList& bagLinkedList, Player& player1, Player& player2, vector<ve
             {
                 cout << ">";
                 stdinstr = readStdin();
-                if (stdinstr[0] == '\x4')
+                if (stdinstr == "EOF")
                 {
                     overFlag = true;
                     break;
@@ -3591,7 +3591,7 @@ void play(LinkedList& bagLinkedList, Player& player1, Player& player2, vector<ve
             {
                 cout << ">";
                 stdinstr = readStdin();
-                if (stdinstr[0] == '\x4')
+                if (stdinstr == "EOF")
                 {
                     overFlag = true;
                     break;

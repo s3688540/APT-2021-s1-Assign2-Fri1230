@@ -554,7 +554,7 @@ int checkPlaceFormat(vector<string> result)
     return 7;
 }
 
-// 11. check whether could place  or not, if ��yes�� return 8,else return 0 or 1 or 2 or 3 or 4 or 5 or 6 or 7
+// 11. check whether could place  or not, if yes return 8,else return 0 or 1 or 2 or 3 or 4 or 5 or 6 or 7
 int checkPlaceLegal(vector<string> result, LinkedList hand)
 {
     int flag = checkPlaceFormat(result);
@@ -3469,7 +3469,7 @@ void play(LinkedList& bagLinkedList, Player& player1, Player& player2, vector<ve
             {
                 cout << ">";
                 stdinstr = readStdin();
-                if (stdinstr == "EOF")
+                if (stdinstr[0] == '\x4')
                 {
                     overFlag = true;
                     break;
@@ -3538,7 +3538,7 @@ void play(LinkedList& bagLinkedList, Player& player1, Player& player2, vector<ve
             {
                 cout << ">";
                 stdinstr = readStdin();
-                if (stdinstr == "EOF")
+                if (stdinstr[0] == '\x4')
                 {
                     overFlag = true;
                     break;

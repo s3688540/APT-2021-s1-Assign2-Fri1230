@@ -7,16 +7,20 @@
 #include <string>
 #include <ctime>
 #include <cctype>
+#include <string.h>
 using namespace std;
 
 #define EXIT_SUCCESS 0
 
-#define COLOUR_ARR "ROY"  //default: "ROYGBP"
-#define SHAPE_ARR {1,2,3}  //default:{1, 2, 3, 4, 5, 6}
+#define COLOUR_ARR "ROY" //default: "ROYGBP"
+#define SHAPE_ARR \
+    {             \
+        1, 2, 3   \
+    }                        //default:{1, 2, 3, 4, 5, 6}
 #define TILE_TOTAL_NUMBER 18 //default:72
-#define COLOUR_TYPE 3 // default:6
-#define SHAPE_TYPE 3 // default:6
-#define HAND_TILE_NUMBER 6 
+#define COLOUR_TYPE 3        // default:6
+#define SHAPE_TYPE 3         // default:6
+#define HAND_TILE_NUMBER 6
 #define BOARD_MAX_SIZE 26
 #define MAX_CHAR_NUMBER 1000
 
@@ -37,11 +41,13 @@ int makeScore(int row, int col, vector<vector<string> > obj); // 14.
 int addHand(LinkedList &linkedList, LinkedList &hand);        // 15.
 void printVector(vector<vector<string> > obj);                // 16.
 
-void welcome();         // 17.
-void mainMenu();        // 18.
-void showStudentInfo(); // 19.
-int checkPlayName(string name); // 20.
-void winner(Player player1,Player player2);
+void welcome();                                                                    // 17.
+void mainMenu();                                                                   // 18.
+void showStudentInfo();                                                            // 19.
+int checkPlayName(string name);                                                    // 20.
+int palceObeyRule(string tileStr, int row, int col, vector<vector<string> > &obj); // 21.
+
+void winner(Player player1, Player player2);
 void playNewGame(LinkedList &linkedList, Player &player1, Player &player2, vector<vector<string> > &boardVector);
 
 int main(int argc, char const *argv[])
@@ -54,38 +60,44 @@ int main(int argc, char const *argv[])
     welcome();
     mainMenu();
     boardVector = initBoard();
-    
+
     string stdins;
     do
     {
         cout << ">";
         stdins = readStdin();
-        switch (stdins[0])
+        if (stdins.length() != 1)
         {
-        case '1':
-            playNewGame(linkedList, player1,player2, boardVector);
-            mainMenu();
-            break;
-
-        case '2':
-            cout << "Enter the filename from which load a game" << endl;
-            cout << ">" << endl;
-            break;
-
-        case '3':
-            showStudentInfo();
-            mainMenu();
-            break;
-
-        case '4':
-            std::cout << "Good bye" << std::endl;
-            break;
-
-        default:
-            std::cout << "Sorry,input error.!!!You should input number 1 0r 2 or 3 or 4." << std::endl;
+            cout << "Input length is over!You should input number 1 0r 2 or 3 or 4."<<endl;
         }
-    } while (stdins[0] != '4');
-    
+        else
+        {
+            switch (stdins[0])
+            {
+            case '1':
+                playNewGame(linkedList, player1, player2, boardVector);
+                mainMenu();
+                break;
+
+            case '2':
+                cout << "Enter the filename from which load a game" << endl;
+                cout << ">" << endl;
+                break;
+
+            case '3':
+                showStudentInfo();
+                mainMenu();
+                break;
+
+            case '4':
+                std::cout << "Good bye" << std::endl;
+                break;
+
+            default:
+                std::cout << "Sorry,input error.!!!You should input number 1 0r 2 or 3 or 4." << std::endl;
+            }
+        }
+    } while (stdins[0] != '4' || stdins.length() != 1);
 
     return EXIT_SUCCESS;
 }
@@ -94,8 +106,8 @@ int main(int argc, char const *argv[])
 string readStdin()
 {
     //TODO
-    char stdin[MAX_CHAR_NUMBER];
-    cin.getline(stdin, MAX_CHAR_NUMBER);
+    string stdin;
+    getline(cin, stdin);
     return stdin;
 }
 
@@ -686,7 +698,7 @@ int palceAtVector(string tileStr, string placeStr, vector<vector<string> > &obj,
     }
     else
     {
-        if (obj[row][col] == "  ")
+        if (obj[row][col] == "  " && palceObeyRule(tileStr, row, col, obj) == 1)
         {
             if (row == 0)
             {
@@ -1049,17 +1061,17 @@ void mainMenu()
 void showStudentInfo()
 {
     Student student[3];
-    student[0].name = "HenghaoLi";
-    student[0].sudentId = "s3798993";
-    student[0].email = "s3798993@student.rmit.edu.au";
+    student[0].name = "Jack";
+    student[0].sudentId = "123456";
+    student[0].email = "qwerty1";
 
-    student[1].name = "JunyuLi";
-    student[1].sudentId = "s3706335";
-    student[1].email = "s3706335@student.rmit.edu.au";
+    student[1].name = "Tom";
+    student[1].sudentId = "234567";
+    student[1].email = "qwerty2";
 
-    student[2].name = "Zongzhouwang";
-    student[2].sudentId = "s3688540";
-    student[2].email = "s3688540@student.rmit.edu.au";
+    student[2].name = "Tim";
+    student[2].sudentId = "345678";
+    student[2].email = "qwerty3";
 
     cout << endl;
     cout << "----------------------------------" << endl;
@@ -1084,32 +1096,372 @@ void showStudentInfo()
 // 20. check palyer name legal or not,if legal return 1,else return 0
 int checkPlayName(string name)
 {
-   int flag = 1;
-   for (int i = 0; i < (int)name.length(); i++)
-   {
-      if (isupper(name[i]) == 0)
-      {
-         flag = 0;
-         break;
-      }
-   }
-   return flag;
+    int flag = 1;
+    for (int i = 0; i < (int)name.length(); i++)
+    {
+        if (isupper(name[i]) == 0)
+        {
+            flag = 0;
+            break;
+        }
+    }
+    return flag;
 }
 
-
-void winner(Player player1,Player player2)
+// 21. check place whether obey Rule of qwirkle,if obey retrun 1,else return 0
+int palceObeyRule(string tileStr, int row, int col, vector<vector<string> > &obj)
 {
-    cout<<"Game over"<<endl;
-    cout<<"Score for "<<player1.name<<": "<<player1.score<<endl;
-    cout<<"Score for "<<player2.name<<": "<<player2.score<<endl;
-    if(player1.score > player2.score){
-        cout<<"Player "<<player1.name<< " won!"<<endl;
-    }else if(player1.score == player2.score){
-        cout<<"There is no winner,as the two palyers' have the same score!!!"<<endl;
-    }else{
-        cout<<"Player "<<player2.name<< " won!"<<endl;
+    int flag = 0;
+    int rowUpNUm = 0;
+    int rowDownNUm = 0;
+    int colBeforeNum = 0;
+    int colAfterNum = 0;
+    char rowUpSameTile = 0;
+    char rowDownSameTile = 0;
+    char colBeforeSameTile = 0;
+    char colAfterSameTile = 0;
+
+    for (int rowUp = row - 1; rowUp > -1; rowUp--)
+    {
+        if (obj[rowUp][col] != "  ")
+        {
+            rowUpNUm += 1;
+            if (obj[rowUp][col] == tileStr)
+            {
+                rowUpSameTile = 1;
+            }
+        }
+        else
+        {
+            break;
+        }
     }
-    cout<<"Goodbye"<<endl;
+    for (int rowDown = row + 1; rowDown < (int)obj.size(); rowDown++)
+    {
+        if (obj[rowDown][col] != "  ")
+        {
+            rowDownNUm += 1;
+            if (obj[rowDown][col] == tileStr)
+            {
+                rowDownSameTile = 1;
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    for (int colBefore = col - 1; colBefore > -1; colBefore--)
+    {
+        if (obj[row][colBefore] != "  ")
+        {
+            colBeforeNum += 1;
+            if (obj[row][colBefore] == tileStr)
+            {
+                colBeforeSameTile = 1;
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+    for (int colAfter = col + 1; colAfter < (int)obj[0].size(); colAfter++)
+    {
+        if (obj[row][colAfter] != "  ")
+        {
+            colAfter += 1;
+            if (obj[row][colAfter] == tileStr)
+            {
+                colAfterSameTile = 1;
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    // 1. row or col can't has the same tile
+    if (rowUpSameTile == 1 || rowDownSameTile == 1 || colBeforeSameTile == 1 || colAfterSameTile == 1)
+    {
+        flag = 0;
+        return flag;
+    }
+
+    //  2. the tiles in row or col should <= 6
+    if (rowUpNUm == 6 || rowDownNUm == 6 || colBeforeNum == 6 || colAfterNum == 6)
+    {
+        flag = 0;
+        return flag;
+    }
+    else if ((rowUpNUm + rowDownNUm >= 6) || (colBeforeNum + colBeforeNum >= 6))
+    {
+        flag = 0;
+        return flag;
+    }
+    else
+    { // attetion: there is no tile in row or col is the same as tile you want to place
+        // 3.
+        if (rowUpNUm == 0)
+        { // 3.1
+            if (rowDownNUm == 0)
+            {
+                // 3.1.1
+                if (colBeforeNum == 0)
+                {
+                    // 3.1.1.1
+                    if (colAfterNum == 0)
+                    {
+                        flag = 1;
+                        // 3.1.1.2
+                    }
+                    else if (colAfterNum == 1)
+                    {
+                        //
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col + 1][0] || tileStr[1] == obj[row][col + 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                        // 3.1.1.3
+                    }
+                    else
+                    {
+
+                        //
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    // 3.1.2
+                }
+                else if (colBeforeNum == 1)
+                {
+                    // should not be same as tileStr
+                    if (tileStr == obj[row][col - 1])
+                    {
+                        flag = 0;
+                        return flag;
+                    }
+                    // 3.1.2.1
+                    if (colAfterNum == 0)
+                    {
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col - 1][0] || tileStr[1] == obj[row][col - 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // 3.1.2.2
+                    }
+                    else if (colAfterNum == 1)
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row should not has same tile
+                        if (obj[row][col - 1] == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                        else
+                        {
+                            if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                            {
+                                flag = 1;
+                            }
+                            else
+                            {
+                                flag = 0;
+                                return 0;
+                            }
+                        }
+                        // 3.1.2.3 colAfterNum > 1
+                    }
+                    else
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            // row should not has same tile
+                            if (obj[row][col - 1] == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                    // 3.1.3 colBeforeNum > 1
+                }
+                else
+                {
+                    // should not be same as tileStr
+                    for (int i = 1; i <= colBeforeNum; i++)
+                    {
+                        if (tileStr == obj[row][col - i])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    // 3.1.3.1
+                    if (colAfterNum == 0)
+                    {
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // 3.1.3.2
+                    }
+                    else if (colAfterNum == 1)
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+
+                        // 3.1.3.3 colAfterNum > 1
+                    }
+                    else
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+
+                //  3.2
+            }
+            else if (rowDownNUm == 1)
+            {
+
+                //  3.3
+            }
+            else
+            {
+            }
+            // 4.
+        }
+        else if (rowUpNUm == 1)
+        {
+
+            // 5. rowUpNUm > 1
+        }
+        else
+        {
+        }
+    }
+
+    return flag;
+}
+
+void winner(Player player1, Player player2)
+{
+    cout << "Game over" << endl;
+    cout << "Score for " << player1.name << ": " << player1.score << endl;
+    cout << "Score for " << player2.name << ": " << player2.score << endl;
+    if (player1.score > player2.score)
+    {
+        cout << "Player " << player1.name << " won!" << endl;
+    }
+    else if (player1.score == player2.score)
+    {
+        cout << "There is no winner,as the two palyers' have the same score!!!" << endl;
+    }
+    else
+    {
+        cout << "Player " << player2.name << " won!" << endl;
+    }
+    cout << "Goodbye" << endl;
 }
 
 void playNewGame(LinkedList &linkedList, Player &player1, Player &player2, vector<vector<string> > &boardVector)
@@ -1118,7 +1470,7 @@ void playNewGame(LinkedList &linkedList, Player &player1, Player &player2, vecto
     linkedList = initBag(randArr);
     player1.hand = initHand(linkedList);
     player2.hand = initHand(linkedList);
-    
+
     bool turnFlag = true;
     bool checkFlag;
     bool overFlag = false;
@@ -1202,12 +1554,15 @@ void playNewGame(LinkedList &linkedList, Player &player1, Player &player2, vecto
                         player1.hand.cut(result.at(1)[0], atoi(&result.at(1)[1]));
                         if (addHand(linkedList, player1.hand) == 0)
                         {
-                            if(player1.hand.size()<1){
+                            if (player1.hand.size() < 1)
+                            {
                                 //
-                                winner(player1,player2);
+                                winner(player1, player2);
                                 overFlag = true;
                                 break;
-                            }else{
+                            }
+                            else
+                            {
                                 cout << "Attention!!! Bag is empty." << endl;
                             }
                         }
@@ -1242,7 +1597,6 @@ void playNewGame(LinkedList &linkedList, Player &player1, Player &player2, vecto
                 {
                     overFlag = true;
                     break;
-                    
                 }
                 result = charSplit(stdinstr);
 
@@ -1263,12 +1617,15 @@ void playNewGame(LinkedList &linkedList, Player &player1, Player &player2, vecto
                         player2.hand.cut(result.at(1)[0], atoi(&result.at(1)[1]));
                         if (addHand(linkedList, player2.hand) == 0)
                         {
-                            if(player2.hand.size()<1){
+                            if (player2.hand.size() < 1)
+                            {
                                 //
-                                winner(player1,player2);
+                                winner(player1, player2);
                                 overFlag = true;
                                 break;
-                            }else{
+                            }
+                            else
+                            {
                                 cout << "Attention!!! Bag is empty." << endl;
                             }
                         }

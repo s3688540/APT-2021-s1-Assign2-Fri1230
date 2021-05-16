@@ -55,7 +55,10 @@ void LinkedList::printHand()
    cout << "Your hand is" << endl;
    for (Node *node = head->next; node; node = node->next)
    {
-      std::cout << node->tile->colour << node->tile->shape << ",";
+       if (node == head->next)
+           std::cout << node->tile->colour << node->tile->shape;
+       else
+           std::cout << "," << node->tile->colour << node->tile->shape;
    }
    cout << endl;
 }

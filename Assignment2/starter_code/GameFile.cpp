@@ -29,6 +29,48 @@ vector<string> GameFile::charSplit(const string& str,const char* sep)
     return result;
 }
 
+bool GameFile::checkIsNum(string str)
+{
+    int len = str.size();
+    for(int i = 0;i<len;i++)
+    {
+        if(!isdigit(str[i]))
+            return false;
+    }
+    return true;
+}
+
+bool GameFile::colourIsValid(char c)
+{
+    if(c == RED || c == ORANGE || c == YELLOW || c == GREEN || c == BLUE || c == PURPLE)
+        return true;
+    return false;
+}
+
+bool GameFile::ShapeIsValid(char s)
+{
+    if(!isdigit(s) || s<'1' || s >'6')
+        return false;
+    return true;
+}
+
+bool GameFile::rowIsValid(char r)
+{
+    if(r>='A'&&r<='Z')
+        return true;
+    return false;
+}
+
+bool GameFile::boardIsValid(string colstr)
+{
+    if(!checkIsNum(colstr))
+        return false;
+    int col = stoi(colstr);
+    if(col>25 || col<0)
+        return false;
+    return true;
+}
+
 int GameFile::saveGame(string fileName)
 {
      
@@ -119,106 +161,142 @@ int GameFile::saveGame(string fileName)
 
     //save players' name
     if (player[0].turn)
-        out << player[0].name << endl;
+        out << player[0].name;
     else
-        out << player[1].name << endl;
+        out << player[1].name;
     
     result = 1;
     return result;
 }
 
-GameFile GameFile::loadGame(string fileName)
+int GameFile::loadGame(string fileName)
 {
-    GameFile gameFile;
-    string buffer;
 
     ifstream input;
     input.open(fileName);
-    if (!input.is_open())
-        return gameFile;
 
+    //
+    if (!input.is_open())
+        return -1;
+    vector<string> buffers;
+    string buffer;
+
+    //读取文件中的数据
+    while(!input.eof())
+    {
+        getline(input,buffer);
+        buffers.push_back(buffer);
+    }
+
+    if(buffers.size()!=10)
+        return 1;
+    
     //load the data for player 1
-    getline(input, buffer);
-    gameFile.player[0].name = buffer;
-    getline(input, buffer);
-    gameFile.player[0].score = stoi(buffer);
-    getline(input, buffer);
+    buffer = buffers[0];
+    player[0].name = buffer;
+
+    buffer = buffers[1];
+    if(!checkIsNum(buffer) || stoi(buffer) < 0)
+        return 1;
+    player[0].score = stoi(buffer);
+
+    buffer = buffers[2];
     vector<string> tiles = charSplit(buffer,",");
-    gameFile.player[0].hand.create();
+    player[0].hand.create();
     for (size_t i = 0; i < tiles.size(); i++)
     {
         Tile* tile = new Tile();
+        if(tiles[i].size() != 2 || !colourIsValid(tiles[i][0]) || !ShapeIsValid(tiles[i][1]))
+            return 1;
         tile->colour = tiles[i][0];
         tile->shape = tiles[i][1]-48;
         Node* node = new Node(tile, NULL);
-        gameFile.player[0].hand.insert(node);
+        player[0].hand.insert(node);
     }
 
     //load the data for player 2
-    getline(input, buffer);
-    gameFile.player[1].name = buffer;
-    getline(input, buffer);
-    gameFile.player[1].score = stoi(buffer);
-    getline(input, buffer);
+    buffer = buffers[3];
+    player[1].name = buffer;
+
+    buffer = buffers[4];
+    if(!checkIsNum(buffer) || stoi(buffer) < 0)
+        return 1;
+    player[1].score = stoi(buffer);
+    
+    buffer = buffers[5];
     tiles = charSplit(buffer,",");
-    gameFile.player[1].hand.create();
+    player[1].hand.create();
     for (size_t i = 0; i < tiles.size(); i++)
     {
         Tile* tile = new Tile();
+        if(tiles[i].size() != 2 || !colourIsValid(tiles[i][0]) || !ShapeIsValid(tiles[i][1]))
+            return 1;
         tile->colour = tiles[i][0];
         tile->shape = tiles[i][1]-48;
         Node* node = new Node(tile, NULL);
-        gameFile.player[1].hand.insert(node);
+        player[1].hand.insert(node);
     }
 
     //load board size
-    getline(input, buffer);
+    buffer = buffers[6];
     vector<string> shape = charSplit(buffer,",");
-    gameFile.boardHeight = stoi(shape[0]);
-    gameFile.boardWidth = stoi(shape[1]);
+    if(shape.size() != 2 || !checkIsNum(shape[0]) || !checkIsNum(shape[1]))
+        return 1;
     
+    boardHeight = stoi(shape[0]);
+    boardWidth = stoi(shape[1]);
+    if (boardHeight > 26 || boardHeight < 1 || boardWidth>26 || boardWidth < 1)
+        return 1;
     //load board state
-    getline(input, buffer);
+    buffer = buffers[7];
     vector<string> items = charSplit(buffer, ",");
-    gameFile.boardState = vector<vector<string>>(26, vector<string>(26,"  "));
+    if(items.size()>26*26)
+        return 1;
+    boardState = vector<vector<string>>(26, vector<string>(26,"  "));
     for (size_t i = 0; i < items.size(); i++)
     {
         vector<string> TileAndPos = charSplit(items[i], "@");
 
-        int row = TileAndPos[1][0] - 65;
-        
         string colstr = TileAndPos[1].substr(1);
+
+        if(TileAndPos.size() !=2 || !rowIsValid(TileAndPos[1][0]) || !boardIsValid(colstr) || !colourIsValid(TileAndPos[0][0])|| !ShapeIsValid(TileAndPos[0][1]))
+            return 1;
+        
+        int row = TileAndPos[1][0] - 65;
         int col = stoi(colstr);
 
-        gameFile.boardState[row][col] = TileAndPos[0];
+        boardState[row][col] = TileAndPos[0];
     }
 
     //load Bag tile,tile,tile,tile,...
-    getline(input, buffer);
+    buffer = buffers[8];
     tiles = charSplit(buffer, ",");
-    gameFile.bagLinkedList.create();
+    bagLinkedList.create();
     for (size_t i = 0; i < tiles.size(); i++)
     {
+        if(tiles[i].size() != 2 || !colourIsValid(tiles[i][0]) || !ShapeIsValid(tiles[i][1]))
+            return 1;
         Tile* tile = new Tile();
         tile->colour = tiles[i][0];
         tile->shape = tiles[i][1]-48;
         Node* node = new Node(tile, NULL);
-        gameFile.bagLinkedList.insert(node);
+        bagLinkedList.insert(node);
     }
 
     //load the current player
-    getline(input, buffer);
-    gameFile.currentPlayer = buffer;
-    if (buffer == gameFile.player[0].name)
+    buffer = buffers[9];
+    if(buffer != player[0].name && buffer != player[1].name)
+        return 1;
+    currentPlayer = buffer;
+    if (buffer == player[0].name)
     {
-        gameFile.player[0].turn = true;
-        gameFile.player[1].turn = false;
+        player[0].turn = true;
+        player[1].turn = false;
     }
     else
     {
-        gameFile.player[0].turn = false;
-        gameFile.player[1].turn = true;
+        player[0].turn = false;
+        player[1].turn = true;
     }
-    return gameFile;
-
+    return 0;
 }

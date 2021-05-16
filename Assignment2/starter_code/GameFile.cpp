@@ -145,7 +145,8 @@ int GameFile::saveGame(string fileName)
     //save BagList tile,tile,tile,tile
     Node* bagHand = bagLinkedList.getHead();
     flag = true;
-    for (Node* node = player_head->next; node; node = node->next)
+    //for (Node* node = player_head->next; node; node = node->next)
+    for (Node* node = bagHand->next; node; node = node->next)
     {
         if (flag)
         {
@@ -181,7 +182,7 @@ int GameFile::loadGame(string fileName)
     vector<string> buffers;
     string buffer;
 
-    //load the data from the file
+    //读取文件中的数据
     while(!input.eof())
     {
         getline(input,buffer);

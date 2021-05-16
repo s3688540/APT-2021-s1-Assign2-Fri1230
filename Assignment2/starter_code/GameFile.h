@@ -25,11 +25,11 @@ public:
    bool colourIsValid(char c); //if c inside ('R','0','Y','G','B','P') then return true, otherwise, false
    bool ShapeIsValid(char s); //if s inside (1,2,3,4,5,6) then return true, otherwise, false
    bool rowIsValid(char r); //if r inside (A-Z) then return true, otherwise, false
-   bool boardIsValid(string colstr); //if colstr smaller then maximum size then return true, otherwise, false
+   bool boardIsValid(string colstr); //colstr smaller then the maximum size then return true, otherwise, false
    
-   // -1:file does not exist
-   //  1:format incorrect, unavailble to load
-   //  0:successfully load
+   // -1:the file does not exist
+   //  1:the format of the file is incorrect, unavailable to load
+   //  0:successfully load 
    int loadGame(string fileName); // load the game info,if load succeed return GameFile,else return NULL
 
 

@@ -12,11 +12,11 @@ using namespace std;
 
 #define EXIT_SUCCESS 0
 
-#define COLOUR_ARR "ROY"  //default: "ROYGBP"
-#define SHAPE_ARR {1,2,3}  //default:{1, 2, 3, 4, 5, 6}
-#define TILE_TOTAL_NUMBER 18 //default:72
-#define COLOUR_TYPE 3 // default:6
-#define SHAPE_TYPE 3 // default:6
+#define COLOUR_ARR "ROYGBP"
+#define SHAPE_ARR {1, 2, 3, 4, 5, 6}
+#define TILE_TOTAL_NUMBER 72
+#define COLOUR_TYPE 6
+#define SHAPE_TYPE 6
 #define HAND_TILE_NUMBER 6 
 #define BOARD_MAX_SIZE 26
 #define MAX_CHAR_NUMBER 1000
@@ -34,6 +34,7 @@ int checkPlaceFormat(vector<string> result);                                    
 int checkPlaceLegal(vector<string> result, LinkedList hand);                                      // 11.
 int palceAtVector(string tileStr, string placeStr, vector<vector<string> >& obj, Player& player); // 12.
 int checkSaveLegal(vector<string> result);
+int palceObeyRule(string tileStr, int row, int col, vector<vector<string> > &obj); // 13
 
 int makeScore(int row, int col, vector<vector<string> > obj); // 14.
 int addHand(LinkedList& linkedList, LinkedList& hand);        // 15.
@@ -58,37 +59,43 @@ int main(int argc, char const* argv[])
 
     welcome();
     mainMenu();
+    boardVector = initBoard();
 
     string stdins;
     do
     {
         cout << ">";
         stdins = readStdin();
-        switch (stdins[0])
+        if (stdins.length() != 1)
         {
-        case '1':
-            newGame(bagLinkedList, player1, player2, boardVector);
-            mainMenu();
-            break;
+            cout << "Input length is over!You should input number 1 0r 2 or 3 or 4." << endl;
+        }else{
+            switch (stdins[0])
+            {
+            case '1':
+                newGame(bagLinkedList, player1, player2, boardVector);
+                mainMenu();
+                break;
 
-        case '2':
-            loadGame(bagLinkedList, player1, player2, boardVector);
-            mainMenu();
-            break;
+            case '2':
+                loadGame(bagLinkedList, player1, player2, boardVector);
+                mainMenu();
+                break;
 
-        case '3':
-            showStudentInfo();
-            mainMenu();
-            break;
+            case '3':
+                showStudentInfo();
+                mainMenu();
+                break;
 
-        case '4':
-            std::cout << "Good bye" << std::endl;
-            break;
+            case '4':
+                cout << "Good bye" << endl;
+                break;
 
-        default:
-            std::cout << "Sorry,input error.!!!You should input number 1 0r 2 or 3 or 4." << std::endl;
+            default:
+                std::cout << "Sorry,input error.!!!You should input number 1 0r 2 or 3 or 4." << std::endl;
+            }
         }
-    } while (stdins[0] != '4');
+    } while(stdins[0] != '4' || stdins.length() != 1);
 
 
     return EXIT_SUCCESS;
@@ -284,7 +291,7 @@ int checkReplaceFormat(vector<string> result)
     return 4;
 }
 
-// 8. check whether could replace succeed or not, if yes, return 5,else return 0 or 1 or 2 or 3 or 4
+// 8. check whether could replace succeed or not, if 'yes' return 5,else return 0 or 1 or 2 or 3 or 4
 int checkReplaceLegal(vector<string> result, LinkedList hand)
 {
     int flag = checkReplaceFormat(result);
@@ -547,7 +554,7 @@ int checkPlaceFormat(vector<string> result)
     return 7;
 }
 
-// 11. check whether could place  or not, if yes, return 8,else return 0 or 1 or 2 or 3 or 4 or 5 or 6 or 7
+// 11. check whether could place  or not, if ��yes�� return 8,else return 0 or 1 or 2 or 3 or 4 or 5 or 6 or 7
 int checkPlaceLegal(vector<string> result, LinkedList hand)
 {
     int flag = checkPlaceFormat(result);
@@ -565,7 +572,7 @@ int checkPlaceLegal(vector<string> result, LinkedList hand)
 }
 
 // 12. check replace succeed or not, if succeed return 1,else return 0
-int palceAtVector(string tileStr, string placeStr, vector<vector<string> >& obj, Player& player)
+int palceAtVector(string tileStr, string placeStr, vector<vector<string> > &obj, Player &player)
 {
     int flag = 0;
     for (int i = 0; i < (int)obj.size(); i++)
@@ -690,7 +697,7 @@ int palceAtVector(string tileStr, string placeStr, vector<vector<string> >& obj,
     }
     else
     {
-        if (obj[row][col] == "  ")
+        if (obj[row][col] == "  " && palceObeyRule(tileStr, row, col, obj) == 1)
         {
             if (row == 0)
             {
@@ -779,6 +786,2231 @@ int palceAtVector(string tileStr, string placeStr, vector<vector<string> >& obj,
     {
         player.score += makeScore(row, col, obj);
     }
+    return flag;
+}
+
+// 13. check place whether obey Rule of qwirkle,if obey retrun 1,else return 0
+int palceObeyRule(string tileStr, int row, int col, vector<vector<string> > &obj)
+{
+    int flag = 0;
+    int rowUpNUm = 0;
+    int rowDownNUm = 0;
+    int colBeforeNum = 0;
+    int colAfterNum = 0;
+    char rowUpSameTile = 0;
+    char rowDownSameTile = 0;
+    char colBeforeSameTile = 0;
+    char colAfterSameTile = 0;
+
+    if (row > 0)
+    {
+
+        for (int rowUp = row - 1; rowUp > -1; rowUp--)
+        {
+            if (obj[rowUp][col] != "  ")
+            {
+                rowUpNUm += 1;
+                if (obj[rowUp][col] == tileStr)
+                {
+                    rowUpSameTile = 1;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    if (row < BOARD_MAX_SIZE - 1)
+    {
+        for (int rowDown = row + 1; rowDown < (int)obj.size(); rowDown++)
+        {
+            if (obj[rowDown][col] != "  ")
+            {
+                rowDownNUm += 1;
+                if (obj[rowDown][col] == tileStr)
+                {
+                    rowDownSameTile = 1;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    if (col > 0)
+    {
+        for (int colBefore = col - 1; colBefore > -1; colBefore--)
+        {
+            if (obj[row][colBefore] != "  ")
+            {
+                colBeforeNum += 1;
+                if (obj[row][colBefore] == tileStr)
+                {
+                    colBeforeSameTile = 1;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    if (col < BOARD_MAX_SIZE - 1)
+    {
+        for (int colAfter = col + 1; colAfter < (int)obj[0].size(); colAfter++)
+        {
+            if (obj[row][colAfter] != "  ")
+            {
+                colAfterNum += 1;
+                if (obj[row][colAfter] == tileStr)
+                {
+                    colAfterSameTile = 1;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    //cout<<"rowUpNUm:"<<rowUpNUm<<",rowDownNUm:"<<rowDownNUm<<",colBeforeNum:"<<colBeforeNum<<",colAfterNum:"<<colAfterNum<<endl;
+    // 1. row or col can't has the same tile
+    if (rowUpSameTile == 1 || rowDownSameTile == 1 || colBeforeSameTile == 1 || colAfterSameTile == 1)
+    {
+        flag = 0;
+        return flag;
+    }
+
+    //  2. the tiles in row or col should <= 6
+    if (rowUpNUm == 6 || rowDownNUm == 6 || colBeforeNum == 6 || colAfterNum == 6)
+    {
+        flag = 0;
+        return flag;
+    }
+    else if ((rowUpNUm + rowDownNUm >= 6) || (colBeforeNum + colBeforeNum >= 6))
+    {
+        flag = 0;
+        return flag;
+    }
+    else
+    { // attetion: there is no tile in row or col is the same as tile you want to place
+        if (rowUpNUm == 0)  // 3.rowUpNUm == 0
+        { 
+            if (rowDownNUm == 0) // 3.1 rowDownNUm == 0
+            {
+                if (colBeforeNum == 0)  // 3.1.1 colBeforeNum == 0
+                {
+                    if (colAfterNum == 0)   // 3.1.1.1 colAfterNum == 0
+                    {
+                        flag = 1;
+                        
+                    }
+                    else if (colAfterNum == 1)  // 3.1.1.2 colAfterNum == 1
+                    {
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col + 1][0] || tileStr[1] == obj[row][col + 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else // 3.1.1.3 colAfterNum > 1
+                    {
+
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    
+                }
+                else if (colBeforeNum == 1) // 3.1.2 colBeforeNum == 1
+                {
+                    // should not be same as tileStr
+                    if (tileStr == obj[row][col - 1])
+                    {
+                        flag = 0;
+                        return flag;
+                    }
+                    if (colAfterNum == 0) // 3.1.2.1 colAfterNum == 0
+                    {
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col - 1][0] || tileStr[1] == obj[row][col - 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1)  // 3.1.2.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row should not has same tile
+                        if (obj[row][col - 1] == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                        else
+                        {
+                            if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                            {
+                                flag = 1;
+                            }
+                            else
+                            {
+                                flag = 0;
+                                return 0;
+                            }
+                        }
+                    }
+                    else    // 3.1.2.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row should not has same tile
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (obj[row][col - 1] == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+                else    // 3.1.3 colBeforeNum > 1
+                {
+                    // should not be same as tileStr
+                    for (int i = 1; i <= colBeforeNum; i++)
+                    {
+                        if (tileStr == obj[row][col - i])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    if (colAfterNum == 0)   // 3.1.3.1 colAfterNum == 0
+                    {
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1) // 3.1.3.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row or col should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            if(obj[row][col+1] == obj[row][col-i]){
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                    else    // 3.1.3.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            for(int j=1;j<colAfterNum;j++){
+                                if(obj[row][col+j] == obj[row][col-i]){
+                                    flag = 0;
+                                    return flag;
+                                }
+                            }
+                        }
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+            }
+            else if (rowDownNUm == 1)   //  3.2 rowDownNUm == 1
+            {
+                // should not be same as tileStr
+                if(tileStr == obj[row+1][col]){
+                    flag = 0;
+                    return flag;
+                }
+
+                if(tileStr[0] != obj[row+1][col][0] && tileStr[1] != obj[row+1][col][1]){
+                    flag = 0;
+                    return flag;
+                }
+
+                if (colBeforeNum == 0)  // 3.2.1 colBeforeNum == 0
+                {
+                    if (colAfterNum == 0)   // 3.2.1.1 colAfterNum == 0
+                    {
+                        flag = 1;
+                        
+                    }
+                    else if (colAfterNum == 1)  // 3.2.1.2 colAfterNum == 1
+                    {
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col + 1][0] || tileStr[1] == obj[row][col + 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else // 3.2.1.3 colAfterNum > 1
+                    {
+
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    
+                }
+                else if (colBeforeNum == 1) // 3.2.2 colBeforeNum == 1
+                {
+                    // should not be same as tileStr
+                    if (tileStr == obj[row][col - 1])
+                    {
+                        flag = 0;
+                        return flag;
+                    }
+                    if (colAfterNum == 0) // 3.2.2.1 colAfterNum == 0
+                    {
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col - 1][0] || tileStr[1] == obj[row][col - 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1)  // 3.2.2.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row or col should not has same tile
+                        if (obj[row][col - 1] == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                        else
+                        {
+                            if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                            {
+                                flag = 1;
+                            }
+                            else
+                            {
+                                flag = 0;
+                                return 0;
+                            }
+                        }
+                    }
+                    else    // 3.2.2.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row or col should not has same tile
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (obj[row][col - 1] == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+                else    // 3.2.3 colBeforeNum > 1
+                {
+                    // should not be same as tileStr
+                    for (int i = 1; i <= colBeforeNum; i++)
+                    {
+                        if (tileStr == obj[row][col - i])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    if (colAfterNum == 0)   // 3.2.3.1 colAfterNum == 0
+                    {
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1) // 3.2.3.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row or col should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            if(obj[row][col+1] == obj[row][col-i]){
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                    else    // 3.2.3.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row or col should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            for(int j=1;j<colAfterNum;j++){
+                                if(obj[row][col+j] == obj[row][col-i]){
+                                    flag = 0;
+                                    return flag;
+                                }
+                            }
+                        }
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+            }
+            else //  3.3 rowDownNUm > 1
+            {
+                // should not be same as tileStr
+                for(int i=1;i<=rowDownNUm;i++){
+                    if(tileStr == obj[row+i][col]){
+                        flag = 0;
+                        return flag;
+                    }
+                }
+
+                if(!((tileStr[0] == obj[row+1][col][0] && tileStr[0] == obj[row+2][col][0]) || (tileStr[1] != obj[row+1][col][1] && tileStr[1] == obj[row+2][col][1]))){
+                    flag = 0;
+                    return flag;
+                }
+
+                if (colBeforeNum == 0)  // 3.3.1 colBeforeNum == 0
+                {
+                    if (colAfterNum == 0)   // 3.3.1.1 colAfterNum == 0
+                    {
+                        flag = 1;
+                        
+                    }
+                    else if (colAfterNum == 1)  // 3.3.1.2 colAfterNum == 1
+                    {
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col + 1][0] || tileStr[1] == obj[row][col + 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else // 3.3.1.3 colAfterNum > 1
+                    {
+
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    
+                }
+                else if (colBeforeNum == 1) // 3.3.2 colBeforeNum == 1
+                {
+                    // should not be same as tileStr
+                    if (tileStr == obj[row][col - 1])
+                    {
+                        flag = 0;
+                        return flag;
+                    }
+                    if (colAfterNum == 0) // 3.3.2.1 colAfterNum == 0
+                    {
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col - 1][0] || tileStr[1] == obj[row][col - 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1)  // 3.3.2.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row or col should not has same tile
+                        if (obj[row][col - 1] == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                        else
+                        {
+                            if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                            {
+                                flag = 1;
+                            }
+                            else
+                            {
+                                flag = 0;
+                                return 0;
+                            }
+                        }
+                    }
+                    else    // 3.3.2.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row or col should not has same tile
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (obj[row][col - 1] == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+                else    // 3.3.3 colBeforeNum > 1
+                {
+                    // should not be same as tileStr
+                    for (int i = 1; i <= colBeforeNum; i++)
+                    {
+                        if (tileStr == obj[row][col - i])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    if (colAfterNum == 0)   // 3.3.3.1 colAfterNum == 0
+                    {
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1) // 3.3.3.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row or col should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            if(obj[row][col+1] == obj[row][col-i]){
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                    else    // 3.3.3.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row or col should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            for(int j=1;j<colAfterNum;j++){
+                                if(obj[row][col+j] == obj[row][col-i]){
+                                    flag = 0;
+                                    return flag;
+                                }
+                            }
+                        }
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+            }
+            
+        }
+        else if (rowUpNUm == 1) // 4.rowUpNUm == 1
+        {
+            // should not be same as tileStr
+            if(tileStr == obj[row-1][col]){
+                flag = 0;
+                return 0;
+            }
+
+            if(tileStr[0] != obj[row-1][col][0] && tileStr[1] != obj[row-1][col][1]){
+                flag = 0;
+                return flag;
+            }
+
+
+            if (rowDownNUm == 0) // 4.1 rowDownNUm == 0
+            {
+                if (colBeforeNum == 0)  // 4.1.1 colBeforeNum == 0
+                {
+                    if (colAfterNum == 0)   // 4.1.1.1 colAfterNum == 0
+                    {
+                        flag = 1;
+                        
+                    }
+                    else if (colAfterNum == 1)  // 4.1.1.2 colAfterNum == 1
+                    {
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col + 1][0] || tileStr[1] == obj[row][col + 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else // 4.1.1.3 colAfterNum > 1
+                    {
+
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    
+                }
+                else if (colBeforeNum == 1) // 4.1.2 colBeforeNum == 1
+                {
+                    // should not be same as tileStr
+                    if (tileStr == obj[row][col - 1])
+                    {
+                        flag = 0;
+                        return flag;
+                    }
+                    if (colAfterNum == 0) // 4.1.2.1 colAfterNum == 0
+                    {
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col - 1][0] || tileStr[1] == obj[row][col - 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1)  // 4.1.2.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row or col should not has same tile
+                        if (obj[row][col - 1] == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                        else
+                        {
+                            if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                            {
+                                flag = 1;
+                            }
+                            else
+                            {
+                                flag = 0;
+                                return 0;
+                            }
+                        }
+                    }
+                    else    // 4.1.2.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row or col should not has same tile
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (obj[row][col - 1] == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+                else    // 4.1.3 colBeforeNum > 1
+                {
+                    // should not be same as tileStr
+                    for (int i = 1; i <= colBeforeNum; i++)
+                    {
+                        if (tileStr == obj[row][col - i])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    if (colAfterNum == 0)   // 4.1.3.1 colAfterNum == 0
+                    {
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1) // 4.1.3.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row or col should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            if(obj[row][col+1] == obj[row][col-i]){
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                    else    // 4.1.3.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row or col should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            for(int j=1;j<colAfterNum;j++){
+                                if(obj[row][col+j] == obj[row][col-i]){
+                                    flag = 0;
+                                    return flag;
+                                }
+                            }
+                        }
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+
+            }else if(rowDownNUm == 1){ // 4.2 rowDownNUm == 1
+
+                // should not be same as tileStr
+                if(tileStr == obj[row+1][col]){
+                    flag = 0;
+                    return flag;
+                }
+
+                // row or col should not has same tile
+                if(obj[row-1][col] == obj[row+1][col]){
+                    flag = 0;
+                    return flag;
+                }
+
+                if(!((tileStr[0] == obj[row-1][col][0] && tileStr[0] == obj[row+1][col][0]) || (tileStr[1] == obj[row-1][col][1] && tileStr[1] == obj[row+1][col][1]))){
+                    flag = 0;
+                    return flag;
+                }
+
+                if (colBeforeNum == 0)  // 4.2.1 colBeforeNum == 0
+                {
+                    if (colAfterNum == 0)   // 4.2.1.1 colAfterNum == 0
+                    {
+                        flag = 1;
+                        
+                    }
+                    else if (colAfterNum == 1)  // 4.2.1.2 colAfterNum == 1
+                    {
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col + 1][0] || tileStr[1] == obj[row][col + 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else // 4.2.1.3 colAfterNum > 1
+                    {
+
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    
+                }
+                else if (colBeforeNum == 1) // 4.2.2 colBeforeNum == 1
+                {
+                    // should not be same as tileStr
+                    if (tileStr == obj[row][col - 1])
+                    {
+                        flag = 0;
+                        return flag;
+                    }
+                    if (colAfterNum == 0) // 4.2.2.1 colAfterNum == 0
+                    {
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col - 1][0] || tileStr[1] == obj[row][col - 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1)  // 4.2.2.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row or col should not has same tile
+                        if (obj[row][col - 1] == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                        else
+                        {
+                            if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                            {
+                                flag = 1;
+                            }
+                            else
+                            {
+                                flag = 0;
+                                return 0;
+                            }
+                        }
+                    }
+                    else    // 4.2.2.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row or col should not has same tile
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (obj[row][col - 1] == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+                else    // 4.2.3 colBeforeNum > 1
+                {
+                    // should not be same as tileStr
+                    for (int i = 1; i <= colBeforeNum; i++)
+                    {
+                        if (tileStr == obj[row][col - i])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    if (colAfterNum == 0)   // 4.2.3.1 colAfterNum == 0
+                    {
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1) // 4.2.3.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row or col should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            if(obj[row][col+1] == obj[row][col-i]){
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                    else    // 4.2.3.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row or col should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            for(int j=1;j<colAfterNum;j++){
+                                if(obj[row][col+j] == obj[row][col-i]){
+                                    flag = 0;
+                                    return flag;
+                                }
+                            }
+                        }
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+
+            }else{  // 4.3 rowDownNUm > 1
+
+                // should not be same as tileStr
+                for(int i=1;i<=rowDownNUm;i++){
+                    if(tileStr == obj[row+i][col]){
+                        flag = 0;
+                        return flag;
+                    }
+                }
+
+                // row or col should not be same as tileStr
+                for(int i=1;i<=rowDownNUm;i++){
+                    if(obj[row-1][col] == obj[row+i][col]){
+                        flag = 0;
+                        return flag;
+                    }
+                }
+
+
+                if(!((tileStr[0] == obj[row-1][col][0] && tileStr[0] == obj[row+1][col][0] && tileStr[0] == obj[row+2][col][0]) || (tileStr[1] == obj[row-1][col][1] && tileStr[1] == obj[row+1][col][1] && tileStr[1] == obj[row+2][col][1]))){
+                    flag = 0;
+                    return flag;
+                }
+
+                if (colBeforeNum == 0)  // 4.3.1 colBeforeNum == 0
+                {
+                    if (colAfterNum == 0)   // 4.3.1.1 colAfterNum == 0
+                    {
+                        flag = 1;
+                        
+                    }
+                    else if (colAfterNum == 1)  // 4.3.1.2 colAfterNum == 1
+                    {
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col + 1][0] || tileStr[1] == obj[row][col + 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else // 4.3.1.3 colAfterNum > 1
+                    {
+
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    
+                }
+                else if (colBeforeNum == 1) // 4.3.2 colBeforeNum == 1
+                {
+                    // should not be same as tileStr
+                    if (tileStr == obj[row][col - 1])
+                    {
+                        flag = 0;
+                        return flag;
+                    }
+                    if (colAfterNum == 0) // 4.3.2.1 colAfterNum == 0
+                    {
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col - 1][0] || tileStr[1] == obj[row][col - 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1)  // 4.3.2.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row or col should not has same tile
+                        if (obj[row][col - 1] == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                        else
+                        {
+                            if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                            {
+                                flag = 1;
+                            }
+                            else
+                            {
+                                flag = 0;
+                                return 0;
+                            }
+                        }
+                    }
+                    else    // 4.3.2.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row or col should not has same tile
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (obj[row][col - 1] == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+                else    // 4.3.3 colBeforeNum > 1
+                {
+                    // should not be same as tileStr
+                    for (int i = 1; i <= colBeforeNum; i++)
+                    {
+                        if (tileStr == obj[row][col - i])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    if (colAfterNum == 0)   // 4.3.3.1 colAfterNum == 0
+                    {
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1) // 4.3.3.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row or col should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            if(obj[row][col+1] == obj[row][col-i]){
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                    else    // 4.3.3.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row or col should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            for(int j=1;j<colAfterNum;j++){
+                                if(obj[row][col+j] == obj[row][col-i]){
+                                    flag = 0;
+                                    return flag;
+                                }
+                            }
+                        }
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+
+            }
+            
+        }
+        else // 5. rowUpNUm > 1
+        {
+            // should not be same as tileStr
+            for(int i=1;i<=rowUpNUm;i++){
+                if(tileStr == obj[row-i][col]){
+                    flag = 0;
+                    return 0;
+                }
+            }
+
+            if(!((tileStr[0] == obj[row+1][col][0] && tileStr[0] == obj[row+2][col][0]) || (tileStr[1] == obj[row+1][col][1] && tileStr[1] == obj[row+2][col][1]))){
+                flag = 0;
+                return flag;
+            }
+
+
+
+            if (rowDownNUm == 0) // 5.1 rowDownNUm == 0
+            {
+                if (colBeforeNum == 0)  // 5.1.1 colBeforeNum == 0
+                {
+                    if (colAfterNum == 0)   // 5.1.1.1 colAfterNum == 0
+                    {
+                        flag = 1;
+                        
+                    }
+                    else if (colAfterNum == 1)  // 5.1.1.2 colAfterNum == 1
+                    {
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col + 1][0] || tileStr[1] == obj[row][col + 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else // 5.1.1.3 colAfterNum > 1
+                    {
+
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    
+                }
+                else if (colBeforeNum == 1) // 5.1.2 colBeforeNum == 1
+                {
+                    // should not be same as tileStr
+                    if (tileStr == obj[row][col - 1])
+                    {
+                        flag = 0;
+                        return flag;
+                    }
+                    if (colAfterNum == 0) // 5.1.2.1 colAfterNum == 0
+                    {
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col - 1][0] || tileStr[1] == obj[row][col - 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1)  // 5.1.2.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row or col should not has same tile
+                        if (obj[row][col - 1] == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                        else
+                        {
+                            if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                            {
+                                flag = 1;
+                            }
+                            else
+                            {
+                                flag = 0;
+                                return 0;
+                            }
+                        }
+                    }
+                    else    // 5.1.2.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row or col should not has same tile
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (obj[row][col - 1] == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+                else    // 5.1.3 colBeforeNum > 1
+                {
+                    // should not be same as tileStr
+                    for (int i = 1; i <= colBeforeNum; i++)
+                    {
+                        if (tileStr == obj[row][col - i])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    if (colAfterNum == 0)   // 5.1.3.1 colAfterNum == 0
+                    {
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1) // 5.1.3.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row or col should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            if(obj[row][col+1] == obj[row][col-i]){
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                    else    // 5.1.3.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row or col should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            for(int j=1;j<colAfterNum;j++){
+                                if(obj[row][col+j] == obj[row][col-i]){
+                                    flag = 0;
+                                    return flag;
+                                }
+                            }
+                        }
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+
+            }else if(rowDownNUm == 1){ // 5.2 rowDownNUm == 1
+
+                // should not be same as tileStr
+                if(tileStr == obj[row+1][col]){
+                    flag = 0;
+                    return flag;
+                }
+
+                // row or col should not has same tile
+                for(int i=1;i<rowUpNUm;i++){
+                    if(obj[row-i][col] == obj[row+1][col]){
+                        flag = 0;
+                        return flag;
+                }
+                }
+
+                if(!((tileStr[0] == obj[row-1][col][0] && tileStr[0] == obj[row-2][col][0] && tileStr[0] == obj[row+1][col][0]) || (tileStr[1] == obj[row-1][col][1] && tileStr[1] == obj[row-2][col][1] && tileStr[1] == obj[row+1][col][1]))){
+                    flag = 0;
+                    return flag;
+                }
+
+                if (colBeforeNum == 0)  // 5.2.1 colBeforeNum == 0
+                {
+                    if (colAfterNum == 0)   // 5.2.1.1 colAfterNum == 0
+                    {
+                        flag = 1;
+                        
+                    }
+                    else if (colAfterNum == 1)  // 5.2.1.2 colAfterNum == 1
+                    {
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col + 1][0] || tileStr[1] == obj[row][col + 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else // 5.2.1.3 colAfterNum > 1
+                    {
+
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    
+                }
+                else if (colBeforeNum == 1) // 5.2.2 colBeforeNum == 1
+                {
+                    // should not be same as tileStr
+                    if (tileStr == obj[row][col - 1])
+                    {
+                        flag = 0;
+                        return flag;
+                    }
+                    if (colAfterNum == 0) // 5.2.2.1 colAfterNum == 0
+                    {
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col - 1][0] || tileStr[1] == obj[row][col - 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1)  // 5.2.2.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row or col should not has same tile
+                        if (obj[row][col - 1] == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                        else
+                        {
+                            if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                            {
+                                flag = 1;
+                            }
+                            else
+                            {
+                                flag = 0;
+                                return 0;
+                            }
+                        }
+                    }
+                    else    // 5.2.2.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row or col should not has same tile
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (obj[row][col - 1] == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+                else    // 5.2.3 colBeforeNum > 1
+                {
+                    // should not be same as tileStr
+                    for (int i = 1; i <= colBeforeNum; i++)
+                    {
+                        if (tileStr == obj[row][col - i])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    if (colAfterNum == 0)   // 5.2.3.1 colAfterNum == 0
+                    {
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1) // 5.2.3.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row or col should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            if(obj[row][col+1] == obj[row][col-i]){
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                    else    // 5.2.3.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row or col should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            for(int j=1;j<colAfterNum;j++){
+                                if(obj[row][col+j] == obj[row][col-i]){
+                                    flag = 0;
+                                    return flag;
+                                }
+                            }
+                        }
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+
+
+            }else{  // 5.3 rowDownNUm > 1
+
+                // should not be same as tileStr
+                for(int i=1;i<=rowDownNUm;i++){
+                    if(tileStr == obj[row+i][col]){
+                        flag = 0;
+                        return flag;
+                    }
+                }
+
+                // row or col should not be same as tileStr
+                for(int i=1;i<=rowUpNUm;i++){
+                    for(int j=1;j<=rowDownNUm;j++){
+                        if(obj[row-i][col] == obj[row+j][col]){
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                }
+
+
+                if(!((tileStr[0] == obj[row-1][col][0] && tileStr[0] == obj[row-2][col][0] && tileStr[0] == obj[row+1][col][0] && tileStr[0] == obj[row+2][col][0]) || (tileStr[1] == obj[row-1][col][1] && tileStr[1] == obj[row-2][col][1] && tileStr[1] == obj[row+1][col][1] && tileStr[1] == obj[row+2][col][1]))){
+                    flag = 0;
+                    return flag;
+                }
+
+                if (colBeforeNum == 0)  // 5.3.1 colBeforeNum == 0
+                {
+                    if (colAfterNum == 0)   // 5.3.1.1 colAfterNum == 0
+                    {
+                        flag = 1;
+                        
+                    }
+                    else if (colAfterNum == 1)  // 5.3.1.2 colAfterNum == 1
+                    {
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col + 1][0] || tileStr[1] == obj[row][col + 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else // 5.3.1.3 colAfterNum > 1
+                    {
+
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    
+                }
+                else if (colBeforeNum == 1) // 5.3.2 colBeforeNum == 1
+                {
+                    // should not be same as tileStr
+                    if (tileStr == obj[row][col - 1])
+                    {
+                        flag = 0;
+                        return flag;
+                    }
+                    if (colAfterNum == 0) // 5.3.2.1 colAfterNum == 0
+                    {
+                        // colour or shape is the same
+                        if (tileStr[0] == obj[row][col - 1][0] || tileStr[1] == obj[row][col - 1][1])
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1)  // 5.3.2.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row or col should not has same tile
+                        if (obj[row][col - 1] == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                        else
+                        {
+                            if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                            {
+                                flag = 1;
+                            }
+                            else
+                            {
+                                flag = 0;
+                                return 0;
+                            }
+                        }
+                    }
+                    else    // 5.3.2.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row or col should not has same tile
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (obj[row][col - 1] == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+                else    // 5.3.3 colBeforeNum > 1
+                {
+                    // should not be same as tileStr
+                    for (int i = 1; i <= colBeforeNum; i++)
+                    {
+                        if (tileStr == obj[row][col - i])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    if (colAfterNum == 0)   // 5.3.3.1 colAfterNum == 0
+                    {
+                        if ((tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col + 1][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+                    }
+                    else if (colAfterNum == 1) // 5.3.3.2 colAfterNum == 1
+                    {
+                        // should not be same as tileStr
+                        if (tileStr == obj[row][col + 1])
+                        {
+                            flag = 0;
+                            return flag;
+                        }
+
+                        // row or col should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            if(obj[row][col+1] == obj[row][col-i]){
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                    else    // 5.3.3.3 colAfterNum > 1
+                    {
+                        // should not be same as tileStr
+                        for (int i = 1; i <= colAfterNum; i++)
+                        {
+                            if (tileStr == obj[row][col + i])
+                            {
+                                flag = 0;
+                                return flag;
+                            }
+                        }
+
+                        // row or col should not has same tile
+                        for(int i=1;i<=colBeforeNum;i++){
+                            for(int j=1;j<colAfterNum;j++){
+                                if(obj[row][col+j] == obj[row][col-i]){
+                                    flag = 0;
+                                    return flag;
+                                }
+                            }
+                        }
+
+                        if ((tileStr[0] == obj[row][col + 1][0] && tileStr[0] == obj[row][col + 2][0] && tileStr[0] == obj[row][col - 1][0] && tileStr[0] == obj[row][col - 2][0]) || (tileStr[1] == obj[row][col + 1][1] && tileStr[1] == obj[row][col + 2][1] && tileStr[1] == obj[row][col - 1][1] && tileStr[1] == obj[row][col - 2][1]))
+                        {
+                            flag = 1;
+                        }
+                        else
+                        {
+                            flag = 0;
+                            return 0;
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+
     return flag;
 }
 
@@ -1132,7 +3364,7 @@ void newGame(LinkedList& bagLinkedList, Player& player1, Player& player2, vector
     player1.hand = initHand(bagLinkedList);
     player2.hand = initHand(bagLinkedList);
 
-    bool turnFlag = true;
+    //bool turnFlag = true;
 
     string stdinstr;
 
@@ -1209,6 +3441,7 @@ void saveGame(LinkedList& bagLinkedList, Player& player1, Player& player2, vecto
     gamefile.boardWidth = boardVector[0].size();
     gamefile.boardState = boardVector;
     gamefile.currentPlayer = player1.turn ? player1.name : player2.name;
+    gamefile.bagLinkedList = bagLinkedList;
     gamefile.saveGame(filename);
     cout << "Game successfully saved" << endl;
 

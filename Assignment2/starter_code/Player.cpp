@@ -7,6 +7,7 @@ using namespace std;
 Player::Player()
 {
    // TODO
+   score = 0;
 }
 
 Player::~Player()

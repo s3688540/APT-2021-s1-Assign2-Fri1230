@@ -49,6 +49,58 @@ void newGame(LinkedList& bagLinkedList, Player& player1, Player& player2, vector
 void loadGame(LinkedList& bagLinkedList, Player& player1, Player& player2, vector<vector<string>>& boardVector);
 void saveGame(LinkedList& bagLinkedList, Player& player1, Player& player2, vector<vector<string>>& boardVector, string filename);
 void play(LinkedList& bagLinkedList, Player& player1, Player& player2, vector<vector<string> >& boardVector, bool turnFlag);
+/*
+int main(int argc, char const* argv[])
+{
+    LinkedList bagLinkedList;
+    Player player1;
+    Player player2;
+    vector<vector<string> > boardVector;
+
+    welcome();
+    mainMenu();
+    boardVector = initBoard();
+
+    string stdins;
+    do
+    {
+        cout << ">";
+        stdins = readStdin();
+        if (stdins.length() != 1)
+        {
+            cout << "Input length is over!You should input number 1 0r 2 or 3 or 4." << endl;
+        }else{
+            switch (stdins[0])
+            {
+            case '1':
+                newGame(bagLinkedList, player1, player2, boardVector);
+                mainMenu();
+                break;
+
+            case '2':
+                loadGame(bagLinkedList, player1, player2, boardVector);
+                mainMenu();
+                break;
+
+            case '3':
+                showStudentInfo();
+                mainMenu();
+                break;
+
+            case '4':
+                cout << "Good bye" << endl;
+                break;
+
+            default:
+                std::cout << "Sorry,input error.!!!You should input number 1 0r 2 or 3 or 4." << std::endl;
+            }
+        }
+    } while(stdins[0] != '4' || stdins.length() != 1);
+
+
+    return EXIT_SUCCESS;
+}
+*/
 
 int main(int argc, char const* argv[])
 {
@@ -3359,7 +3411,8 @@ void winner(Player player1, Player player2)
 void newGame(LinkedList& bagLinkedList, Player& player1, Player& player2, vector<vector<string> >& boardVector)
 {
     boardVector = initBoard();
-    vector<int> randArr = initRandObj();
+    //vector<int> randArr = initRandObj();
+    vector<int> randArr = {10,33,63,12,54,32,2,8,51,0,29,47,23,21,45,7,43,46,26,40,39,62,1,4,14,48,61,36,64,34,25,19,17,71,24,55,15,56,28,27,41,42,50,9,35,66,57,11,16,53,68,38,18,65,44,37,58,5,52,6,3,13,67,69,30,60,59,70,49,31,22,20};
     bagLinkedList = initBag(randArr);
     player1.hand = initHand(bagLinkedList);
     player2.hand = initHand(bagLinkedList);
@@ -3419,9 +3472,9 @@ void loadGame(LinkedList& bagLinkedList, Player& player1, Player& player2, vecto
         string stdstr = readStdin();
         status = gamefile.loadGame(stdstr);
         if (status == -1)
-            cout << "File doesn't exist,please enter filename again.." << endl; 
+            cout << "File doesn't exist,please enter filename again.." << endl;
         else if (status == 1)
-            cout << "data format error,please enter filename again.." << endl; 
+            cout << "data format error,please enter filename again.." << endl;
     } while (status != 0);
     bool turnFlag = gamefile.player[0].turn ? true : false;
     bagLinkedList = gamefile.bagLinkedList;
